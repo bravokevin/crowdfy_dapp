@@ -26,6 +26,9 @@ contract Crowdfy{
     mapping(address => uint) hasContributed;
     mapping (address => bool) hasCampaign;
 
+    //the contributor gives the beneficiary the oportunity to take their founds, even if the campaign failled. Does not aply if the campaign is cancelled
+    mapping(address => bool) canTakeFounds;
+
     event CampaignStarted(string campaignName, address addr, uint targetAmount, uint deadline);
     event CampaignFinished(address addr, uint totalCollected, bool suceeded);
 
@@ -37,10 +40,12 @@ contract Crowdfy{
         hasCampaign[msg.sender] = true;
     }
 
-    function contribute()public payable {
+    function contribute(bool _giveFounds)public payable {
         require(!collected, "The campaign was finished");
         totalCollected += msg.value;
         hasContributed[msg.sender] = msg.value;
+        
+        canTakeFounds[msg.sender] = _giveFounds;
 
         if(totalCollected >= targetAmount){
             _closeCampaign();
@@ -56,5 +61,7 @@ contract Crowdfy{
     function _withdraw() internal {
 
     }
+
+
 
 }
