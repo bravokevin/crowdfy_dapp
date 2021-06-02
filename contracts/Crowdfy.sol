@@ -1,67 +1,101 @@
-pragma solidity ^8.0.0;
+//SPDX-License-Identifier: UNLICENSED;
+pragma solidity ^0.8.0;
 
 contract Crowdfy{
-
+    
+    //The posible states of the campaign
     enum State {
         Ongoing,
-        Failed, 
+        Failed,
         Succeded,
-        PaidOut,
-        Cancelled
+        PaidOut
     }
 
-    struct Campaign {
-        string campaignName;
-        address beneficiary;
-        uint targetAmount;
-        uint totalCollected;
-        uint deadline;
-        bool collected;
-        State state;
-    }
-    //see options to storage the campagins.
+    // event CampaignFinished(
+    //     address addr,
+    //     uint totalCollected,
+    //     bool suceeded
+    // );
 
-    Campaign[] public campaigns;
+    string public campaignName;
+    uint public targetAmount;
+    uint public deadline;
+    address public beneficiary;
+    address public owner;
+    State public state;
 
-    mapping(address => uint) hasContributed;
-    mapping (address => bool) hasCampaign;
+    mapping(address => uint) public amounts; //@dev: to see how much each account deposit
+    bool public collected; //@dev: to see if we collected the enough amount of foounds
+    uint public totalCollected;
 
-    //the contributor gives the beneficiary the oportunity to take their founds, even if the campaign failled. Does not aply if the campaign is cancelled
-    mapping(address => bool) canTakeFounds;
-
-    event CampaignStarted(string campaignName, address addr, uint targetAmount, uint deadline);
-    event CampaignFinished(address addr, uint totalCollected, bool suceeded);
-
-    ///@dev: create a new campaign, only one account per active campaing. Once started they cannot update this parameters
-    function createCampaign(string memory _campaignName, uint _targetAmount, uint _deadline) public {
-        require(!hasCampaign, "Only one campaign per account");
-        campaigns.push(Campaign(_campaignName, msg.sender, _targetAmount, 0, _deadline, false, State.Ongoing));
-        emit CampaignStarted(_campaignName, msg.sender, _targetAmount, _deadline);
-        hasCampaign[msg.sender] = true;
+    modifier inState(State _expectedState){
+        require(state == _expectedState, "Invalid state");
+        _;
     }
 
-    function contribute(bool _giveFounds)public payable {
-        require(!collected, "The campaign was finished");
-        totalCollected += msg.value;
-        hasContributed[msg.sender] = msg.value;
-        
-        canTakeFounds[msg.sender] = _giveFounds;
+    constructor (
+        string memory _campaignName,
+        uint _targetAmount,
+        uint _deadline,
+        address _beneficiaryAddress)
 
-        if(totalCollected >= targetAmount){
-            _closeCampaign();
-        }
-    }
-
-    //SEE IF THIS CAN BE IN SEPARATE FUNCTIONS.
-    //close the campaign once collected, failure or canceled
-    function _closeCampaign() private {
-    }
-
-    // to give all the fonds collected to the beneficiary
-    function _withdraw() internal {
-
+    {
+        campaignName = _campaignName;
+        targetAmount = _targetAmount;
+        deadline = _deadline;
+        beneficiary = _beneficiaryAddress;
+        owner = msg.sender;
+        state = State.Ongoing;
     }
 
 
+    // function contribute() public payable inState(State.Ongoing){
+    //     require(!beforeDeadLine(), "No contributions after the deadline");
 
+    //     amounts[msg.sender] += msg.value;
+    //     totalCollected += msg.value;
+
+    //     if(totalCollected >= targetAmount){
+    //         collected = true;
+    //     }
+
+    //     emit CampaignFinished(this, totalCollected, collected);
+    // }
+
+    // function finishCrowdFunding() public inState(State.Ongoing) {
+    //     require(beforeDeadLine(), "Cannot finish the campaign before the deadline");
+    //     if(!collected) {
+    //         state = State.Failed;
+    //     } else {
+    //         state = State.Succeded;
+    //     }
+    // }
+
+    // function collect() public inState(State.Succeded){
+    //     if(beneficiary.send(totalCollected)){
+    //         state = State.PaidOut;
+    //     }
+    //     else{
+    //         state = State.Failed;
+    //     }
+    // }
+
+    // function withdraw() public inState(State.Failed){
+    //     require(amounts[msg.sender] > 0, "Nothing was contributed");
+    //     uint contributed = amounts[msg.sender];
+    //     amounts[msg.sender] = 0;
+
+    //     if(!msg.sender.send(contributed)){
+    //         amounts[msg.sender] = contributed;
+    //     }
+
+    // }
+
+    // function beforeDeadLine() public view returns(bool){
+    //     return currentTime() > fundingDeadLine;
+    // }
+
+    // function currentTime() internal view returns(uint){
+    //     return now;
+    // }
 }
