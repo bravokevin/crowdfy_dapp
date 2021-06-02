@@ -42,5 +42,6 @@ contract('Crowdfy', (accounts) =>{
 
         let state = await contract.state.call()
         expect(Number(state.valueOf())).to.equal(STATE.ongoing);
+
     })
 })

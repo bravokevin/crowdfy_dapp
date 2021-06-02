@@ -23,9 +23,10 @@ contract Crowdfy{
     address public beneficiary;
     address public owner;
     State public state;
+    uint256 public created;
 
-    mapping(address => uint) public amounts; //@dev: to see how much each account deposit
-    bool public collected; //@dev: to see if we collected the enough amount of foounds
+    mapping(address => uint) public amounts; // to see how much each account deposit
+    bool public collected; //to see if we collected the enough amount of foounds
     uint public totalCollected;
 
     modifier inState(State _expectedState){
@@ -46,7 +47,9 @@ contract Crowdfy{
         beneficiary = _beneficiaryAddress;
         owner = msg.sender;
         state = State.Ongoing;
+        created = block.timestamp;
     }
+    // function stage() public{}
 
 
     // function contribute() public payable inState(State.Ongoing){
