@@ -22,19 +22,19 @@ contract('CrowdfyFabric', accounts => {
         1000000,
         beneficiary,);
 
-        const theCampaignAddress = await contract.campaigns.call(0)
+        // const theCampaignAddress = await contract.campaigns.call(0)
 
-        console.log(theCampaignAddress)
+        // console.log(theCampaignAddress)
 
-        const campaignContract1 = await contract.createCampaign("afadfan",
-        2000000,
-        2,
-        1000000,
-        beneficiary,);
+        // const campaignContract1 = await contract.createCampaign("afadfan",
+        // 2000000,
+        // 2,
+        // 1000000,
+        // beneficiary,);
 
-        const theCampaignAddress1 = await contract.campaigns.call(1)
+        // const theCampaignAddress1 = await contract.campaigns.call(1)
 
-        console.log(theCampaignAddress1)
+        // console.log(theCampaignAddress1)
 
     })
 })

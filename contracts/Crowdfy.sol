@@ -46,15 +46,13 @@ contract Crowdfy {
         uint time;
     }
 
-    // mapping(address => Contribution[]) public contributionsByPeople; // to see how much each account deposit
+    Contribution[] public contributions;
+    mapping(address => Contribution) contributionsByPeople;
+
 
     Campaign public newCampaign;
 
-        /** MODIFIERS  */
-    // modifier inState(State _expectedState){
-    //     require(Campaign.state == _expectedState, "Invalid state");
-    //     _;
-    // }
+   
 
     constructor (
         string memory _campaignName,
@@ -81,7 +79,21 @@ contract Crowdfy {
 
     }
 
+     /** MODIFIERS  */
+    modifier inState(State _expectedState){
+        require(newCampaign.state == _expectedState, "This function is not permited in this state of the campaign");
+        _;
+    }
     
+    function contribute() external payable inState(State.Ongoing){
+
+        require(msg.value > 0, "Put A correctamount");
+        newCampaign.amountRised += msg.value;
+
+        Contribution memory newContribution = Contribution({sender: tx.origin, value: msg.value, time: block.timestamp});
+
+        contributions.push(newContribution);
+    }
 
 
     // function contribute() public payable inState(State.Ongoing) /**returns(uint256 _contributionID)*/{
@@ -101,9 +113,6 @@ contract Crowdfy {
     //     );
 
     //     contributionsByPeople[msg.sender].push(contributions[contributionID]);
-
-    //     amountRised += msg.value;
-
     //     emit ContributionMade(contributions[contributionID]);
 
     //     if(amountRised >= fundingGoal){

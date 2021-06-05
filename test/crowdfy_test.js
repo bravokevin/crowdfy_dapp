@@ -59,21 +59,49 @@ contract('Crowdfy', (accounts) => {
 
     });
 
-    // it("can contribute founds", async () => {
+    it("should contribute founds", async () => {
 
-    //     await contract.contribute({
-    //         value: 20000,
-    //         from: accounts[1]
-    //     });
+        let campaignStruct = await contract.newCampaign.call()
+
+        const destructStruct = (struct) =>{
+            const {campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, collected,state, amountRised} = struct;
+            
+            return {campaignName, 
+                    fundingGoal: Number(fundingGoal),
+                    fundingCap: Number(fundingCap),
+                    deadline: Number(deadline),
+                    beneficiary, 
+                    owner, 
+                    created: Number(created),
+                    collected,
+                    state: Number(state),
+                    amountRised: Number(amountRised)
+                    }
+        };
+
+                
+        let destructuredCampaign = destructStruct(campaignStruct);
+        expect(destructuredCampaign.amountRised).to.equal(0)
+
+        await contract.contribute({
+            value: 20000,
+            from: accounts[1]
+        });
+
+        campaignStruct = await contract.newCampaign.call()
+        destructuredCampaign = destructStruct(campaignStruct)
+
+        expect(destructuredCampaign.amountRised).to.equal(20000)
+
+        const contributions = await contract.contributions.call(0);
+        console.log(contributions)
+
     //     // let contributionID = await contract.contributionID.call();
     //     // expect(contributionID).to.equal(1);
 
     //     // let contributions = await contract.contributions.call(ContributionID);
     //     // console.log(contributions)
 
-    //     // let amountRised = await contract.amountRised.call()
-    //     // expect(amountRised).to.equal(200000);
-
     //     // let contributor = sawait contract.contributionsByPeople.call();
-    // })
+    })
 })
