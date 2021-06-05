@@ -17,7 +17,8 @@ contract Crowdfy {
 
 
         /** EVENTS */
-    // event ContributionMade(Contribution _contribution);
+    event ContributionMade (Contribution _contributionMade);
+    event MinimumReached (string);
 
     // event CampaignFinished(
     //     address addr,
@@ -85,20 +86,30 @@ contract Crowdfy {
         _;
     }
     
+    ///@notice allows users to contribute to the campaign, as the campaign is in the onoging state. Sets collected to true if the minimum amount is reached,emmit an event to let know to the user.
     function contribute() external payable inState(State.Ongoing){
 
-        require(msg.value > 0, "Put A correctamount");
+        require(msg.value > 0, "Put A correct amount");
+
         newCampaign.amountRised += msg.value;
 
         Contribution memory newContribution = Contribution({sender: tx.origin, value: msg.value, time: block.timestamp});
 
         contributions.push(newContribution);
+
+        emit ContributionMade(newContribution);
+
+        if(newCampaign.amountRised >= newCampaign.fundingGoal){
+            newCampaign.collected = true;
+            emit MinimumReached("The minimum value has reached");
+        }
     }
 
 
-    // function contribute() public payable inState(State.Ongoing) /**returns(uint256 _contributionID)*/{
 
-    //     require(msg.value > 0, "Put a correct amount");
+
+
+    // function contribute() public payable inState(State.Ongoing) /**returns(uint256 _contributionID)*/{
 
     //     contributionID = contributions.length;
     //     contributionID++;
@@ -113,16 +124,6 @@ contract Crowdfy {
     //     );
 
     //     contributionsByPeople[msg.sender].push(contributions[contributionID]);
-    //     emit ContributionMade(contributions[contributionID]);
-
-    //     if(amountRised >= fundingGoal){
-    //         collected = true;
-
-    //         if(amountRised >= fundingCap){
-    //             // closeCampaign();
-    //         }
-    //     }
-
     //     return contributionID;
     // }
 

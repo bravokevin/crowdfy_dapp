@@ -63,7 +63,7 @@ contract('Crowdfy', (accounts) => {
 
         let campaignStruct = await contract.newCampaign.call()
 
-        const destructStruct = (struct) =>{
+        const destructCampaign = (struct) =>{
             const {campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, collected,state, amountRised} = struct;
             
             return {campaignName, 
@@ -79,8 +79,18 @@ contract('Crowdfy', (accounts) => {
                     }
         };
 
+        const destructContribution = contribution =>{
+            const {sender, value, time} = contribution;
+
+            return{
+                sender,
+                value: Number(value),
+                time
+            }
+        }
+
                 
-        let destructuredCampaign = destructStruct(campaignStruct);
+        let destructuredCampaign = destructCampaign(campaignStruct);
         expect(destructuredCampaign.amountRised).to.equal(0)
 
         await contract.contribute({
@@ -89,12 +99,17 @@ contract('Crowdfy', (accounts) => {
         });
 
         campaignStruct = await contract.newCampaign.call()
-        destructuredCampaign = destructStruct(campaignStruct)
+        destructuredCampaign = destructCampaign(campaignStruct)
 
         expect(destructuredCampaign.amountRised).to.equal(20000)
 
         const contributions = await contract.contributions.call(0);
-        console.log(contributions)
+
+        let contributionDestructured = destructContribution(contributions); 
+        expect(contributionDestructured.sender).to.equal(accounts[1]);
+        expect(contributionDestructured.value).to.equal(20000);
+
+
 
     //     // let contributionID = await contract.contributionID.call();
     //     // expect(contributionID).to.equal(1);
