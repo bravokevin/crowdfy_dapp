@@ -1,10 +1,10 @@
 const CrowdfyContract = artifacts.require('./Crowdfy');
 
-contract('Crowdfy', (accounts) =>{
+contract('Crowdfy', (accounts) => {
     let contract;
     let contractCreator = accounts[0];
     let beneficiary = accounts[2];
-  
+
     const STATE = {
         ongoing: 0,
         failed: 1,
@@ -14,34 +14,66 @@ contract('Crowdfy', (accounts) =>{
 
     beforeEach(async () => {
         contract = await CrowdfyContract.new("My Campaign",
-        2000000,
-        2,
-        beneficiary,
-        {
-            from: contractCreator,
-            gas: 2000000
-        }
+            1000000,
+            2,
+            2000000,
+            beneficiary,
+            {
+                from: contractCreator,
+                gas: 2000000
+            }
         )
     })
 
-    it("contract is initialized correctly", async () =>{
-        let campaignName = await contract.campaignName.call()
-        expect(campaignName).to.equal('My Campaign');
+    it("contract should be initialized correctly", async () => {
+        let campaignStruct = await contract.newCampaign.call()
 
-        let targetAmount = await contract.targetAmount.call()
-        expect(Number(targetAmount)).to.equal(2000000);
+        const destructStruct = (struct) =>{
+            const {campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, collected,state, amountRised} = struct;
+            
+            return {campaignName, 
+                    fundingGoal: Number(fundingGoal),
+                    fundingCap: Number(fundingCap),
+                    deadline: Number(deadline),
+                    beneficiary, 
+                    owner, 
+                    created: Number(created),
+                    collected,
+                    state: Number(state),
+                    amountRised: Number(amountRised)
+                    }
+        };
 
-        let actualBeneficiary = await contract.beneficiary.call()
-        expect(actualBeneficiary).to.equal(beneficiary);
+        const destructuredCampaign = destructStruct(campaignStruct);
 
-        let actualOwner = await contract.owner.call()
-        expect(actualOwner).to.equal(contractCreator);
+        expect(destructuredCampaign.campaignName).to.equal('My Campaign');
+        expect(destructuredCampaign.fundingGoal).to.equal(1000000);
+        expect(destructuredCampaign.fundingCap).to.equal(2000000);
+        expect(destructuredCampaign.deadline).to.equal(2)
+        expect(destructuredCampaign.beneficiary).to.equal(beneficiary);
+        expect(destructuredCampaign.owner).to.equal(contractCreator);
+        //lack for creation tiima
+        expect(destructuredCampaign.collected).to.equal(false);
+        expect(destructuredCampaign.state.valueOf()).to.equal(STATE.ongoing);
+        expect(destructuredCampaign.amountRised).to.equal(0);
 
-        let fundingDeadLine = await contract.deadline.call()
-        expect(Number(fundingDeadLine)).to.equal(2)
+    });
 
-        let state = await contract.state.call()
-        expect(Number(state.valueOf())).to.equal(STATE.ongoing);
+    // it("can contribute founds", async () => {
 
-    })
+    //     await contract.contribute({
+    //         value: 20000,
+    //         from: accounts[1]
+    //     });
+    //     // let contributionID = await contract.contributionID.call();
+    //     // expect(contributionID).to.equal(1);
+
+    //     // let contributions = await contract.contributions.call(ContributionID);
+    //     // console.log(contributions)
+
+    //     // let amountRised = await contract.amountRised.call()
+    //     // expect(amountRised).to.equal(200000);
+
+    //     // let contributor = sawait contract.contributionsByPeople.call();
+    // })
 })

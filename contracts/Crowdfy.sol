@@ -1,15 +1,23 @@
 //SPDX-License-Identifier: UNLICENSED;
 pragma solidity ^0.8.0;
 
-contract Crowdfy{
+//import "./CrowdfyI.sol";
+
+contract Crowdfy {
     
+    /**ENUMS */
+
     //The posible states of the campaign
     enum State {
         Ongoing,
         Failed,
         Succeded,
-        PaidOut
+        Finalized
     }
+
+
+        /** EVENTS */
+    // event ContributionMade(Contribution _contribution);
 
     // event CampaignFinished(
     //     address addr,
@@ -17,88 +25,96 @@ contract Crowdfy{
     //     bool suceeded
     // );
 
-    string public campaignName;
-    uint public targetAmount;
-    uint public deadline;
-    address public beneficiary;
-    address public owner;
-    State public state;
-    uint256 public created;
-
-    mapping(address => uint) public amounts; // to see how much each account deposit
-    bool public collected; //to see if we collected the enough amount of foounds
-    uint public totalCollected;
-
-    modifier inState(State _expectedState){
-        require(state == _expectedState, "Invalid state");
-        _;
+    //Campaigns dataStructure
+    struct Campaign  {
+        string  campaignName;
+        uint fundingGoal;//the minimum amount that the campaigns required
+        uint fundingCap; //the maximum amount that the campaigns required
+        uint deadline;
+        address beneficiary;//the beneficiary of the campaign
+        address owner;//the creator of the campaign
+        uint created; // the time when the campaign was created
+        bool collected; //to see if we collected the enough amount of foounds
+        State state; //the current state of the campaign
+        uint amountRised;  
     }
+
+    //Contribution datastructure
+    struct Contribution {
+        address sender;
+        uint value;
+        uint time;
+    }
+
+    // mapping(address => Contribution[]) public contributionsByPeople; // to see how much each account deposit
+
+    Campaign public newCampaign;
+
+        /** MODIFIERS  */
+    // modifier inState(State _expectedState){
+    //     require(Campaign.state == _expectedState, "Invalid state");
+    //     _;
+    // }
 
     constructor (
         string memory _campaignName,
-        uint _targetAmount,
+        uint _fundingGoal,
         uint _deadline,
+        uint _fundingCap,
         address _beneficiaryAddress)
-
     {
-        campaignName = _campaignName;
-        targetAmount = _targetAmount;
-        deadline = _deadline;
-        beneficiary = _beneficiaryAddress;
-        owner = msg.sender;
-        state = State.Ongoing;
-        created = block.timestamp;
+        newCampaign = Campaign(
+            {
+            campaignName: _campaignName,
+            fundingGoal: _fundingGoal,
+            fundingCap: _fundingCap,
+            deadline: _deadline,
+            beneficiary: _beneficiaryAddress,
+            owner: tx.origin,
+            created: block.timestamp,
+            collected: false,
+            state: State.Ongoing,
+            amountRised: 0
+            }
+        );
+
+
     }
-    // function stage() public{}
+
+    
 
 
-    // function contribute() public payable inState(State.Ongoing){
-    //     require(!beforeDeadLine(), "No contributions after the deadline");
+    // function contribute() public payable inState(State.Ongoing) /**returns(uint256 _contributionID)*/{
 
-    //     amounts[msg.sender] += msg.value;
-    //     totalCollected += msg.value;
+    //     require(msg.value > 0, "Put a correct amount");
 
-    //     if(totalCollected >= targetAmount){
+    //     contributionID = contributions.length;
+    //     contributionID++;
+
+
+    //     contributions[contributionID] = Contribution(
+    //         {
+    //         sender: msg.sender,
+    //         amount: msg.value,
+    //         created: block.timestamp
+    //         }
+    //     );
+
+    //     contributionsByPeople[msg.sender].push(contributions[contributionID]);
+
+    //     amountRised += msg.value;
+
+    //     emit ContributionMade(contributions[contributionID]);
+
+    //     if(amountRised >= fundingGoal){
     //         collected = true;
+
+    //         if(amountRised >= fundingCap){
+    //             // closeCampaign();
+    //         }
     //     }
 
-    //     emit CampaignFinished(this, totalCollected, collected);
+    //     return contributionID;
     // }
 
-    // function finishCrowdFunding() public inState(State.Ongoing) {
-    //     require(beforeDeadLine(), "Cannot finish the campaign before the deadline");
-    //     if(!collected) {
-    //         state = State.Failed;
-    //     } else {
-    //         state = State.Succeded;
-    //     }
-    // }
-
-    // function collect() public inState(State.Succeded){
-    //     if(beneficiary.send(totalCollected)){
-    //         state = State.PaidOut;
-    //     }
-    //     else{
-    //         state = State.Failed;
-    //     }
-    // }
-
-    // function withdraw() public inState(State.Failed){
-    //     require(amounts[msg.sender] > 0, "Nothing was contributed");
-    //     uint contributed = amounts[msg.sender];
-    //     amounts[msg.sender] = 0;
-
-    //     if(!msg.sender.send(contributed)){
-    //         amounts[msg.sender] = contributed;
-    //     }
-
-    // }
-
-    // function beforeDeadLine() public view returns(bool){
-    //     return currentTime() > fundingDeadLine;
-    // }
-
-    // function currentTime() internal view returns(uint){
-    //     return now;
-    // }
 }
