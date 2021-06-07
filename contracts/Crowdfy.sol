@@ -23,7 +23,7 @@ contract Crowdfy {
 
     // event CampaignFinished(
     //     address addr,
-    //     uint totalCollected,
+    //     uint totalminimumCollected,
     //     bool suceeded
     // );
 
@@ -36,7 +36,7 @@ contract Crowdfy {
         address beneficiary;//the beneficiary of the campaign
         address owner;//the creator of the campaign
         uint created; // the time when the campaign was created
-        bool collected; //to see if we collected the enough amount of foounds
+        bool minimumCollected; //to see if we minimumCollected the enough amount of foounds
         State state; //the current state of the campaign
         uint amountRised;  
     }
@@ -73,7 +73,7 @@ contract Crowdfy {
             beneficiary: _beneficiaryAddress,
             owner: tx.origin,
             created: block.timestamp,
-            collected: false,
+            minimumCollected: false,
             state: State.Ongoing,
             amountRised: 0
             }
@@ -88,7 +88,7 @@ contract Crowdfy {
         _;
     }
     
-    ///@notice allows users to contribute to the campaign, as the campaign is in the onoging state. Sets collected to true if the minimum amount is reached,emmit an event to let know to the user.
+    ///@notice allows users to contribute to the campaign, as the campaign is in the onoging state. Sets minimumCollected to true if the minimum amount is reached,emmit an event to let know to the user.
     function contribute() external payable inState(State.Ongoing){
 
         require(msg.value > 0, "Put A correct amount");
@@ -101,10 +101,12 @@ contract Crowdfy {
 
         emit ContributionMade(newContribution);
 
-        if(newCampaign.amountRised >= newCampaign.fundingGoal){
-            newCampaign.collected = true;
+        if(newCampaign.amountRised >= newCampaign.fundingCap){
+            newCampaign.minimumCollected = true;
             emit MinimumReached("The minimum value has reached");
-            // newCampaign.state = State.Succeded;
+            if(newCampaign.amountRised >= newCampaign.fundingCap){
+                newCampaign.state = State.Succeded;
+            }
         }
     }
 
@@ -112,7 +114,7 @@ contract Crowdfy {
     function state() private view returns(uint8) {
 
         if(newCampaign.deadline < block.timestamp 
-        && newCampaign.collected == false )
+        && newCampaign.minimumCollected == false )
         {
             return uint8(State.Ongoing);
         }   
@@ -124,7 +126,7 @@ contract Crowdfy {
         }
 
         else if(block.timestamp >= newCampaign.deadline 
-        && newCampaign.collected == false 
+        && newCampaign.minimumCollected == false 
         && newCampaign.amountRised < newCampaign.fundingGoal)
         {
             return uint8(State.Failed);
