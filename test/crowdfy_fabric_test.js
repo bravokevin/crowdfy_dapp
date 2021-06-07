@@ -18,7 +18,7 @@ contract('CrowdfyFabric', accounts => {
     it("should create a campaign instance", async () =>{
         const campaignContract = await contract.createCampaign("My Campaign",
         2000000,
-        2,
+        1623046581,
         1000000,
         beneficiary,);
 

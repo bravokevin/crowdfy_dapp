@@ -17,8 +17,9 @@ contract Crowdfy {
 
 
         /** EVENTS */
-    event ContributionMade (Contribution _contributionMade);
-    event MinimumReached (string);
+    event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
+    event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
+    event WithdrawToBeneficiary(string); //fire when the beneficiary withdraws found
 
     // event CampaignFinished(
     //     address addr,
@@ -62,6 +63,7 @@ contract Crowdfy {
         uint _fundingCap,
         address _beneficiaryAddress)
     {
+        // require(_deadline >= block.timestamp, "Your duedate have to be major than the current time");
         newCampaign = Campaign(
             {
             campaignName: _campaignName,
@@ -82,7 +84,7 @@ contract Crowdfy {
 
      /** MODIFIERS  */
     modifier inState(State _expectedState){
-        require(newCampaign.state == _expectedState, "This function is not permited in this state of the campaign");
+        require(state() == uint8(_expectedState), "This function is not permited in this state of the campaign");
         _;
     }
     
@@ -102,29 +104,32 @@ contract Crowdfy {
         if(newCampaign.amountRised >= newCampaign.fundingGoal){
             newCampaign.collected = true;
             emit MinimumReached("The minimum value has reached");
+            // newCampaign.state = State.Succeded;
         }
     }
 
+    //the current state of the campaign
+    function state() private view returns(uint8) {
 
+        if(newCampaign.deadline < block.timestamp 
+        && newCampaign.collected == false )
+        {
+            return uint8(State.Ongoing);
+        }   
 
+        else if(newCampaign.amountRised >= newCampaign.fundingCap 
+        || block.timestamp >= newCampaign.deadline)
+        {
+            return uint8(State.Succeded);
+        }
 
+        else if(block.timestamp >= newCampaign.deadline 
+        && newCampaign.collected == false 
+        && newCampaign.amountRised < newCampaign.fundingGoal)
+        {
+            return uint8(State.Failed);
+        }
+    }
 
-    // function contribute() public payable inState(State.Ongoing) /**returns(uint256 _contributionID)*/{
-
-    //     contributionID = contributions.length;
-    //     contributionID++;
-
-
-    //     contributions[contributionID] = Contribution(
-    //         {
-    //         sender: msg.sender,
-    //         amount: msg.value,
-    //         created: block.timestamp
-    //         }
-    //     );
-
-    //     contributionsByPeople[msg.sender].push(contributions[contributionID]);
-    //     return contributionID;
-    // }
-
+   
 }
