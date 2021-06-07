@@ -93,6 +93,7 @@ contract Crowdfy {
 
         require(msg.value > 0, "Put A correct amount");
 
+
         newCampaign.amountRised += msg.value;
 
         Contribution memory newContribution = Contribution({sender: tx.origin, value: msg.value, time: block.timestamp});
@@ -104,28 +105,34 @@ contract Crowdfy {
         if(newCampaign.amountRised >= newCampaign.fundingCap){
             newCampaign.minimumCollected = true;
             emit MinimumReached("The minimum value has reached");
-            if(newCampaign.amountRised >= newCampaign.fundingCap){
+            if((newCampaign.deadline < block.timestamp 
+                 && newCampaign.amountRised >= newCampaign.fundingGoal)
+                 || newCampaign.amountRised >= newCampaign.fundingCap)
+                {
                 newCampaign.state = State.Succeded;
-            }
+                }
         }
     }
 
-    //the current state of the campaign
-    function state() private view returns(uint8) {
 
-        if(newCampaign.deadline < block.timestamp 
-        && newCampaign.minimumCollected == false )
+    ///@notice evaluates the current state of the campaign, its used for the "inState" modifier
+    function state() private view returns(uint8 _state) {
+
+        if(newCampaign.deadline > block.timestamp 
+        && newCampaign.minimumCollected == false
+        && newCampaign.amountRised < newCampaign.fundingCap)
         {
             return uint8(State.Ongoing);
         }   
 
-        else if(newCampaign.amountRised >= newCampaign.fundingCap 
-        || block.timestamp >= newCampaign.deadline)
+        else if((newCampaign.deadline < block.timestamp 
+        && newCampaign.amountRised >= newCampaign.fundingGoal)
+        || newCampaign.amountRised >= newCampaign.fundingCap)
         {
             return uint8(State.Succeded);
         }
 
-        else if(block.timestamp >= newCampaign.deadline 
+        else if(block.timestamp > newCampaign.deadline 
         && newCampaign.minimumCollected == false 
         && newCampaign.amountRised < newCampaign.fundingGoal)
         {
@@ -133,5 +140,11 @@ contract Crowdfy {
         }
     }
 
-   
+    ///@notice this function ITS ONLY for test porpuses
+    function setDate() external {
+        newCampaign.deadline = 3;
+
+    }
+
+    
 }

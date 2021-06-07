@@ -28,7 +28,6 @@ contract CrowdfyFabric{
 
         emit CampaignCreated(_campaignName, tx.origin, _beneficiaryAddress, _fundingCap, block.timestamp, _deadline);
 
-        
     }
 }
 

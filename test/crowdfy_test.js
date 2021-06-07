@@ -1,5 +1,5 @@
-const CrowdfyContract = artifacts.require('./Crowdfy');
-
+const CrowdfyContract = artifacts.require('./Crowdfy.sol');
+// const CrowdfyFabricContract = artifacts.require('./CrowdfyFabric');
 
 
 contract('Crowdfy', (accounts) => {
@@ -32,9 +32,21 @@ contract('Crowdfy', (accounts) => {
     };
 
     beforeEach(async () => {
+        // contract = await CrowdfyFabricContract.new(
+        //     {
+        //         from: contractCreator,
+        //         gas: 2000000
+        //     }
+        // )
+        // const campaignContract = await contract.createCampaign("My Campaign",
+        // 2000000,
+        // 1623135770000,
+        // 1000000,
+        // beneficiary,);
+
         contract = await CrowdfyContract.new("My Campaign",
             1000000,
-            2,
+            1623135770000,
             2000000,
             beneficiary,
             {
@@ -53,7 +65,7 @@ contract('Crowdfy', (accounts) => {
             expect(destructuredCampaign.campaignName).to.equal('My Campaign');
             expect(destructuredCampaign.fundingGoal).to.equal(1000000);
             expect(destructuredCampaign.fundingCap).to.equal(2000000);
-            expect(destructuredCampaign.deadline).to.equal(2)
+            expect(destructuredCampaign.deadline).to.equal(1623135770000)
             expect(destructuredCampaign.beneficiary).to.equal(beneficiary);
             expect(destructuredCampaign.owner).to.equal(contractCreator);
             //lack for creation tiima
@@ -78,7 +90,9 @@ contract('Crowdfy', (accounts) => {
             }
 
 
+
             let destructuredCampaign = destructCampaign(campaignStruct);
+
             expect(destructuredCampaign.amountRised).to.equal(0)
 
             await contract.contribute({
@@ -139,5 +153,62 @@ contract('Crowdfy', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal(2020000)
             expect(campaignDestructured.minimumCollected).to.equal(true)
             expect(campaignDestructured.state).to.equal(STATE.succed)
+        })
+
+        it("should not contribute during succes state", async ()=> {
+
+            await contract.contribute({
+                value: 20000,
+                from: accounts[1]
+            });
+
+            await contract.contribute({
+                value: 500000,
+                from: accounts[1]
+            });
+
+            await contract.contribute({
+                value: 500000,
+                from: accounts[1]
+            });
+
+            await contract.contribute({
+                value: 500000,
+                from: accounts[1]
+            });
+
+            await contract.contribute({
+                value: 500000,
+                from: accounts[1]
+            });
+            let campaignStruct = await contract.newCampaign.call()
+
+            let campaignDestructured = destructCampaign(campaignStruct);
+            expect(campaignDestructured.state).to.equal(STATE.succed)
+
+            try{
+                await contract.contribute({
+                    value: 500000,
+                    from: accounts[1]
+                });
+            expect.fail()
+            } catch (err){
+
+            }
+
+
+        })
+
+        it("should not contribute after deadline", async () =>{
+            contract.setDate({from: contractCreator});
+
+            try{
+            await contract.contribute({
+                value: 500000,
+                from: accounts[1]
+            });
+            expect.fail()
+            }catch(error){
+            }
         })
 })
