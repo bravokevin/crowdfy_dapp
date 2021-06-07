@@ -211,4 +211,35 @@ contract('Crowdfy', (accounts) => {
             }catch(error){
             }
         })
+
+        it("should withdraw the founds", async () =>{
+            await contract.contribute({
+                value: 2000000,
+                from: accounts[1]
+            });
+
+            let campaignStruct = await contract.newCampaign.call()
+
+            let campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.amountRised).to.equal(2000000);
+
+           let  beneficiaryInicialBalance = await web3.eth.getBalance(beneficiary)
+           console.log(`This is the iniciao balance: ${beneficiaryInicialBalance}`)
+
+           await contract.withdraw({
+               from: beneficiary
+           });
+
+           let beneficiaryFinalBalance = await web3.eth.getBalance(beneficiary)
+           console.log(`This is the final balance: ${beneficiaryFinalBalance}`)
+
+        //    expect(beneficiaryFinalBalance).to.equal(200000 + bene)
+
+           campaignStruct = await contract.newCampaign.call()
+
+           campaignDestructured = destructCampaign(campaignStruct);
+
+           expect(campaignDestructured.amountRised).to.equal(0)
+        })
 })

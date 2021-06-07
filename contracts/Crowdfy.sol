@@ -19,7 +19,7 @@ contract Crowdfy {
         /** EVENTS */
     event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
     event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
-    event WithdrawToBeneficiary(string); //fire when the beneficiary withdraws found
+    event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
 
     // event CampaignFinished(
     //     address addr,
@@ -146,5 +146,14 @@ contract Crowdfy {
 
     }
 
-    
+    ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
+    function withdraw() external payable inState(State.Succeded){
+        require(newCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
+
+        payable(newCampaign.beneficiary).transfer(address(this).balance);
+
+        newCampaign.amountRised = address(this).balance;
+
+        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
+    }
 }
