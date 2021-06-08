@@ -224,22 +224,15 @@ contract('Crowdfy', (accounts) => {
 
             expect(campaignDestructured.amountRised).to.equal(2000000);
 
-           let  beneficiaryInicialBalance = await web3.eth.getBalance(beneficiary)
-           console.log(`This is the iniciao balance: ${beneficiaryInicialBalance}`)
+           let beneficiaryInicialBalance = await web3.eth.getBalance(beneficiary)
+
 
            await contract.withdraw({
-               from: beneficiary
+               from: contractCreator
            });
 
            let beneficiaryFinalBalance = await web3.eth.getBalance(beneficiary)
-           console.log(`This is the final balance: ${beneficiaryFinalBalance}`)
 
-        //    expect(beneficiaryFinalBalance).to.equal(200000 + bene)
-
-           campaignStruct = await contract.newCampaign.call()
-
-           campaignDestructured = destructCampaign(campaignStruct);
-
-           expect(campaignDestructured.amountRised).to.equal(0)
+           expect(Number(beneficiaryFinalBalance)).to.equal( Number(beneficiaryInicialBalance) + 2000000)
         })
 })

@@ -148,12 +148,12 @@ contract Crowdfy {
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
     function withdraw() external payable inState(State.Succeded){
-        require(newCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
+        require(newCampaign.beneficiary == tx.origin || tx.origin == newCampaign.owner, "Only the beneficiary can call this function");
 
-        payable(newCampaign.beneficiary).transfer(address(this).balance);
-
-        newCampaign.amountRised = address(this).balance;
+        payable(newCampaign.beneficiary).transfer(newCampaign.amountRised);
 
         emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
+        
+        newCampaign.state = State.Finalized;
     }
 }
