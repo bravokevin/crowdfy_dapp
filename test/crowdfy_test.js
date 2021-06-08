@@ -235,4 +235,58 @@ contract('Crowdfy', (accounts) => {
 
            expect(Number(beneficiaryFinalBalance)).to.equal( Number(beneficiaryInicialBalance) + 2000000)
         })
+
+        it("should refound founds when the campaign fail", () =>{
+
+            await contract.contribute({
+                value: 20000,
+                from: accounts[8]
+            });
+
+            await contract.contribute({
+                value: 500000,
+                from: accounts[9]
+            });
+
+            await contract.contribute({
+                value: 4000,
+                from: accounts[4]
+            });
+
+            await contract.contribute({
+                value: 400000,
+                from: accounts[7]
+            });
+
+            await contract.contribute({
+                value: 40000,
+                from: accounts[4]
+            });
+
+            await contract.contribute({
+                value: 40000,
+                from: accounts[3]
+            });
+
+            await contract.contribute({
+                value: 40000,
+                from: accounts[0]
+            });
+
+            
+            await contract.contribute({
+                value: 40000,
+                from: accounts[9]
+            });
+
+            contract.setDate({from: contractCreator});
+
+
+            
+
+        })
+
+        it("should have contributors", async () =>{
+            
+        })
 })

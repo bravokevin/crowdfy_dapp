@@ -20,6 +20,7 @@ contract Crowdfy {
     event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
     event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
     event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
+    event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); //fire when the contributor recive the founds if the campaign fails
 
     // event CampaignFinished(
     //     address addr,
@@ -98,6 +99,8 @@ contract Crowdfy {
 
         Contribution memory newContribution = Contribution({sender: tx.origin, value: msg.value, time: block.timestamp});
 
+        contributionsByPeople[tx.origin] = newContribution;
+
         contributions.push(newContribution);
 
         emit ContributionMade(newContribution);
@@ -156,4 +159,20 @@ contract Crowdfy {
         
         newCampaign.state = State.Finalized;
     }
+
+
+    ///@notice claim a refund if the campaign was failed and only if you are a contributor
+    ///@dev this follows the withdraw pattern to prevent reentrancy
+    function claimFounds () external payable inState(State.Failed) {
+
+        uint amountToRefound = contributionsByPeople[tx.origin].value;
+
+        require(amountToRefound != 0);
+        require(address(this).balance >= amountToRefound);
+
+        contributionsByPeople[tx.origin].value = 0;
+
+        payable(contributionsByPeople[tx.origin].sender).transfer(amountToRefound);
+    }
 }
+
