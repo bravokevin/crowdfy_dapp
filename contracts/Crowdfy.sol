@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 //import "./CrowdfyI.sol";
 
+///@title crowdfy crowdfunding contract
 contract Crowdfy {
     
     /**ENUMS */
@@ -22,11 +23,7 @@ contract Crowdfy {
     event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
     event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); //fire when the contributor recive the founds if the campaign fails
 
-    // event CampaignFinished(
-    //     address addr,
-    //     uint totalminimumCollected,
-    //     bool suceeded
-    // );
+    event CampaignFinished(string _message);
 
     //Campaigns dataStructure
     struct Campaign  {
@@ -50,7 +47,9 @@ contract Crowdfy {
     }
 
     Contribution[] public contributions;
-    mapping(address => Contribution) contributionsByPeople;
+
+    // all contributions id's of an
+    mapping(address => uint[]) public contributionsByPeople;
 
 
     Campaign public newCampaign;
@@ -93,15 +92,16 @@ contract Crowdfy {
     function contribute() external payable inState(State.Ongoing){
 
         require(msg.value > 0, "Put A correct amount");
-
-
-        newCampaign.amountRised += msg.value;
-
-        Contribution memory newContribution = Contribution({sender: tx.origin, value: msg.value, time: block.timestamp});
-
-        contributionsByPeople[tx.origin] = newContribution;
+            
+        Contribution memory newContribution = Contribution({sender: msg.sender, value: msg.value, time: block.timestamp});
 
         contributions.push(newContribution);
+
+        uint contributionID = (contributions.length) + 1;
+
+        contributionsByPeople[msg.sender].push(contributionID);
+
+        newCampaign.amountRised += msg.value;
 
         emit ContributionMade(newContribution);
 
@@ -158,6 +158,7 @@ contract Crowdfy {
         emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
         
         newCampaign.state = State.Finalized;
+        emit CampaignFinished
     }
 
 
@@ -165,14 +166,24 @@ contract Crowdfy {
     ///@dev this follows the withdraw pattern to prevent reentrancy
     function claimFounds () external payable inState(State.Failed) {
 
-        uint amountToRefound = contributionsByPeople[tx.origin].value;
+        for(uint i = 0; i < contributionsByPeople[msg.sender].length; i++){
+            
+            uint theContributionID = i++;
 
-        require(amountToRefound != 0);
-        require(address(this).balance >= amountToRefound);
+            if(contributions[theContributionID].value != 0){
 
-        contributionsByPeople[tx.origin].value = 0;
+                if(address(this).balance >= contributions[theContributionID].value){
 
-        payable(contributionsByPeople[tx.origin].sender).transfer(amountToRefound);
-    }
+                    payable(contributions[theContributionID].sender).transfer(contributions[theContributionID].value);
+
+                }
+
+            }
+
+            }
+
+
+     }
+
 }
 

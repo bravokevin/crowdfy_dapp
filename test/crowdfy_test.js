@@ -14,6 +14,7 @@ contract('Crowdfy', (accounts) => {
         paidOut: 3,
     };
 
+    //allows us to destruct the campaign struct
     const destructCampaign = (struct) => {
         const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised } = struct;
 
@@ -30,6 +31,17 @@ contract('Crowdfy', (accounts) => {
             amountRised: Number(amountRised)
         }
     };
+
+    //allows us to destruct the contribution struct
+    const destructContribution = contribution => {
+        const { sender, value, time } = contribution;
+
+        return {
+            sender,
+            value: Number(value),
+            time
+        }
+    }
 
     beforeEach(async () => {
         // contract = await CrowdfyFabricContract.new(
@@ -78,18 +90,6 @@ contract('Crowdfy', (accounts) => {
         it("should contribute founds", async () => {
 
             let campaignStruct = await contract.newCampaign.call()
-
-            const destructContribution = contribution => {
-                const { sender, value, time } = contribution;
-
-                return {
-                    sender,
-                    value: Number(value),
-                    time
-                }
-            }
-
-
 
             let destructuredCampaign = destructCampaign(campaignStruct);
 
@@ -236,57 +236,89 @@ contract('Crowdfy', (accounts) => {
            expect(Number(beneficiaryFinalBalance)).to.equal( Number(beneficiaryInicialBalance) + 2000000)
         })
 
-        it("should refound founds when the campaign fail", () =>{
+        // it("should have contributors", async () =>{
+
+        //     await contract.contribute({
+        //         value: 500000,
+        //         from: accounts[1]
+        //     });
+
+        //     await contract.contribute({
+        //         value: 500000,
+        //         from: accounts[6]
+        //     });
+
+        //     await contract.contribute({
+        //         value: 250000,
+        //         from: accounts[5]
+        //     });
+
+            
+        //     await contract.contribute({
+        //         value: 250000,
+        //         from: accounts[5]
+        //     });
+
+        //     await contract.contribute({
+        //         value: 250000,
+        //         from: accounts[5]
+        //     });
+
+
+        // })
+
+        it("should refound the founds to the contribuitors", async () =>{
 
             await contract.contribute({
-                value: 20000,
-                from: accounts[8]
-            });
-
-            await contract.contribute({
-                value: 500000,
-                from: accounts[9]
-            });
-
-            await contract.contribute({
-                value: 4000,
-                from: accounts[4]
-            });
-
-            await contract.contribute({
-                value: 400000,
-                from: accounts[7]
-            });
-
-            await contract.contribute({
-                value: 40000,
-                from: accounts[4]
-            });
-
-            await contract.contribute({
-                value: 40000,
-                from: accounts[3]
-            });
-
-            await contract.contribute({
-                value: 40000,
-                from: accounts[0]
+                value: 3000,
+                from: accounts[5]
             });
 
             
             await contract.contribute({
-                value: 40000,
-                from: accounts[9]
+                value: 3000,
+                from: accounts[5]
+            });
+
+            await contract.contribute({
+                value: 300000,
+                from: accounts[5]
+            });
+
+            await contract.contribute({
+                value: 300000,
+                from: accounts[4]
             });
 
             contract.setDate({from: contractCreator});
 
+            let inicialBalance = await web3.eth.getBalance(accounts[5])
+            console.log(`this is the inicial balance ${inicialBalance}`)
 
-            
 
-        })
+            await contract.claimFounds({from: accounts[5]});
 
-        it("should have contributors", async () =>{
-            
+            let finalBalance = await web3.eth.getBalance(accounts[5])
+            console.log(`this is the final balance ${finalBalance}`)
+
+
+
+
+            // let contributionDestructured = destructContribution(contributions);
+
+
         })
 })
+
+//  Contribution refundContribution = contributions[_contributionID];
+
+//     // send funds to the newly created balance claim contract
+//     balanceClaim = address(new BalanceClaim(refundContribution.sender));
+
+//     // set refunds claim address
+//     refundClaimAddress[_contributionID] = balanceClaim;
+
+//     // send funds to the newly created balance claim contract
+//     if (!balanceClaim.send(refundContribution.value)) {
+//       throw;
+//     }
