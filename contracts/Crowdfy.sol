@@ -158,13 +158,14 @@ contract Crowdfy {
         emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
         
         newCampaign.state = State.Finalized;
-        emit CampaignFinished
     }
 
 
     ///@notice claim a refund if the campaign was failed and only if you are a contributor
     ///@dev this follows the withdraw pattern to prevent reentrancy
     function claimFounds () external payable inState(State.Failed) {
+
+        newCampaign.state= State.Failed;
 
         for(uint i = 0; i < contributionsByPeople[msg.sender].length; i++){
             
@@ -173,17 +174,13 @@ contract Crowdfy {
             if(contributions[theContributionID].value != 0){
 
                 if(address(this).balance >= contributions[theContributionID].value){
-
                     payable(contributions[theContributionID].sender).transfer(contributions[theContributionID].value);
-
+                    contributions[theContributionID].value = 0;
                 }
-
+                    
             }
 
-            }
-
-
-     }
-
+        }
+    }
 }
 
