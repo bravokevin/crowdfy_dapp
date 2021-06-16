@@ -9,8 +9,7 @@ contract('CrowdfyFabric', accounts => {
     before(async () => {
         contract = await CrowdfyFabricContract.new(
             {
-                from: contractCreator,
-                gas: 2000000
+                from: contractCreator
             }
         )
     })

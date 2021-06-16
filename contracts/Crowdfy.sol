@@ -51,36 +51,7 @@ contract Crowdfy {
     // all contributions id's of an
     mapping(address => uint[]) public contributionsByPeople;
 
-
     Campaign public newCampaign;
-
-   
-
-    constructor (
-        string memory _campaignName,
-        uint _fundingGoal,
-        uint _deadline,
-        uint _fundingCap,
-        address _beneficiaryAddress)
-    {
-        // require(_deadline >= block.timestamp, "Your duedate have to be major than the current time");
-        newCampaign = Campaign(
-            {
-            campaignName: _campaignName,
-            fundingGoal: _fundingGoal,
-            fundingCap: _fundingCap,
-            deadline: _deadline,
-            beneficiary: _beneficiaryAddress,
-            owner: tx.origin,
-            created: block.timestamp,
-            minimumCollected: false,
-            state: State.Ongoing,
-            amountRised: 0
-            }
-        );
-
-
-    }
 
      /** MODIFIERS  */
     modifier inState(State _expectedState){
@@ -116,6 +87,8 @@ contract Crowdfy {
                 }
         }
     }
+    
+
 
 
     ///@notice evaluates the current state of the campaign, its used for the "inState" modifier
@@ -158,6 +131,8 @@ contract Crowdfy {
         emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
         
         newCampaign.state = State.Finalized;
+
+        emit CampaignFinished("The campaign was finished succesfull");
     }
 
 
@@ -165,7 +140,7 @@ contract Crowdfy {
     ///@dev this follows the withdraw pattern to prevent reentrancy
     function claimFounds () external payable inState(State.Failed) {
 
-        newCampaign.state= State.Failed;
+        newCampaign.state = State.Failed;
 
         for(uint i = 0; i < contributionsByPeople[msg.sender].length; i++){
             
@@ -176,11 +151,40 @@ contract Crowdfy {
                 if(address(this).balance >= contributions[theContributionID].value){
                     payable(contributions[theContributionID].sender).transfer(contributions[theContributionID].value);
                     contributions[theContributionID].value = 0;
+                    emit ContributorRefounded(contributions[theContributionID].sender, contributions[theContributionID].value);
                 }
                     
             }
 
         }
+        
+    }
+
+    function initializeCampaign
+    (
+        string memory _campaignName,
+        uint _fundingGoal,
+        uint _deadline,
+        uint _fundingCap,
+        address _beneficiaryAddress
+    ) public
+    {
+
+        require(_deadline >= block.timestamp, "Your duedate have to be major than the current time");
+
+        newCampaign = Campaign(
+            {
+            campaignName: _campaignName,
+            fundingGoal: _fundingGoal,
+            fundingCap: _fundingCap,
+            deadline: _deadline,
+            beneficiary: _beneficiaryAddress,
+            owner: tx.origin,
+            created: block.timestamp,
+            minimumCollected: false,
+            state: State.Ongoing,
+            amountRised: 0
+            });
     }
 }
 

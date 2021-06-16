@@ -56,18 +56,19 @@ contract('Crowdfy', (accounts) => {
         // 1000000,
         // beneficiary,);
 
-        contract = await CrowdfyContract.new("My Campaign",
-            1000000,
-            1623135770000,
-            2000000,
-            beneficiary,
+        contract = await CrowdfyContract.new(
             {
                 from: contractCreator,
                 gas: 2000000
             }
-        )
+        );
 
-    })
+        contract.initializeCampaign("My Campaign",
+        1000000,
+        1623135770000,
+        2000000,
+        beneficiary,);
+    });
 
         it("contract should be initialized correctly", async () => {
             let campaignStruct = await contract.newCampaign.call()
@@ -208,7 +209,8 @@ contract('Crowdfy', (accounts) => {
                 from: accounts[1]
             });
             expect.fail()
-            }catch(error){
+            }
+            catch(error){
             }
         })
 
@@ -281,7 +283,7 @@ contract('Crowdfy', (accounts) => {
             });
 
             await contract.contribute({
-                value: 300000,
+                value: 200000,
                 from: accounts[5]
             });
 
