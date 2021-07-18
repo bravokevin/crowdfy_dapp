@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: UNLICENSED;
 pragma solidity ^0.8.0;
 
-//import "./CrowdfyI.sol";
+import "./CrowdfyI.sol";
 
 ///@title crowdfy crowdfunding contract
-contract Crowdfy {
+contract Crowdfy is CrowdfyI {
     
     /**ENUMS */
 
