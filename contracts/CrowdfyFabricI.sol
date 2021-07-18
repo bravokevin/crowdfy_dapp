@@ -11,6 +11,6 @@ interface CrowdfyFabricI is CrowdfyI {
         uint _deadline, 
         uint _fundingCap, 
         address _beneficiaryAddress
-    ) virtual external returns(bool);
+    ) external returns(bool);
 
 }

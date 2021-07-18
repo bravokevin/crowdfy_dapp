@@ -93,10 +93,7 @@ contract CrowdfyFabric{
         return campaigns.length;
     }
 
-    /**@notice gets a campaign by is creator*/
-    function getCampaignByUser(address _userAddress) external view returns(Campaign memory){
-        return campaignsByUser[_userAddress];
-    }
+
 
 }
 

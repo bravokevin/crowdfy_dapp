@@ -21,7 +21,7 @@ contract('CrowdfyFabric', accounts => {
         }
     };
 
-    const CREATION_TIME = 1623135770000;
+    const CREATION_TIME = 1686614159;
     
     before(async () => {
         contract = await CrowdfyFabricContract.new(
@@ -41,7 +41,7 @@ contract('CrowdfyFabric', accounts => {
         const  campaignLength = await contract.getCampaignsLength.call();
         expect(Number(campaignLength)).to.equal(1)
 
-        const campaignByUserStruct = await contract.getCampaignByUser.call(userCampaignCreator)
+        const campaignByUserStruct = await contract.campaignsByUser.call(userCampaignCreator)
 
         const destructuredCampaign = destructCampaign(campaignByUserStruct);
 
@@ -61,7 +61,7 @@ contract('CrowdfyFabric', accounts => {
             2000000,
             beneficiary, {from: userCampaignCreator});
 
-        expect.fail()
+            expect.fail()
         }
         catch(err){
             expect(err.reason).to.equal('Your duedate have to be major than the current time');
