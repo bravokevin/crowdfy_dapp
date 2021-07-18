@@ -124,7 +124,7 @@ contract Crowdfy {
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
     function withdraw() external payable inState(State.Succeded){
-        require(newCampaign.beneficiary == tx.origin || tx.origin == newCampaign.owner, "Only the beneficiary can call this function");
+        require(newCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
 
         payable(newCampaign.beneficiary).transfer(newCampaign.amountRised);
 
@@ -139,8 +139,6 @@ contract Crowdfy {
     ///@notice claim a refund if the campaign was failed and only if you are a contributor
     ///@dev this follows the withdraw pattern to prevent reentrancy
     function claimFounds () external payable inState(State.Failed) {
-
-        newCampaign.state = State.Failed;
 
         for(uint i = 0; i < contributionsByPeople[msg.sender].length; i++){
             
@@ -170,7 +168,7 @@ contract Crowdfy {
     ) public
     {
 
-        require(_deadline >= block.timestamp, "Your duedate have to be major than the current time");
+        require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
 
         newCampaign = Campaign(
             {

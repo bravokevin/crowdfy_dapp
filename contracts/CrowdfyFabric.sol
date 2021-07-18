@@ -5,7 +5,7 @@ pragma solidity 0.8.0;
 import "./Crowdfy.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-/**@title Create a new campaign, stores its address and emmit and event*/
+/**@title Create a new campaign using a minimal proxi pattern, stores its address and emmit and event*/
 contract CrowdfyFabric{
         event CampaignCreated(
         string campaignName,
@@ -17,6 +17,7 @@ contract CrowdfyFabric{
 
     //Stores the campaign Address
     address[] public campaigns;
+
     address immutable campaignImplementation;
 
     constructor(){
