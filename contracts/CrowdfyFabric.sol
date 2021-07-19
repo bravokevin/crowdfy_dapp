@@ -1,5 +1,4 @@
 //SPDX-License-Identifier: UNLICENSED;
-
 pragma solidity 0.8.0;
 
 import "./Crowdfy.sol";
@@ -24,7 +23,7 @@ contract CrowdfyFabric{
 
         event CampaignCreated(
             string campaignName,
-            address owner, 
+            address creator, 
             address beneficiary, 
             uint fundingGoal, 
             uint createdTime, 
@@ -54,7 +53,6 @@ contract CrowdfyFabric{
 
 
 
-
     ///@notice deploy a new instance of the campaign
     function createCampaign(
         string memory _campaignName, 
@@ -63,14 +61,16 @@ contract CrowdfyFabric{
         uint _fundingCap, 
         address _beneficiaryAddress
     ) external returns(bool) {
+
+        address campaignCreator = msg.sender;
         
         address cloneContract = Clones.clone(campaignImplementation);
 
-        Crowdfy(cloneContract).initializeCampaign(_campaignName, _fundingGoal, _deadline, _fundingCap, _beneficiaryAddress);
+        Crowdfy(cloneContract).initializeCampaign(_campaignName, _fundingGoal, _deadline, _fundingCap, _beneficiaryAddress, campaignCreator);
 
         campaigns.push(cloneContract);
 
-        campaignsByUser[msg.sender] = Campaign
+        campaignsByUser[campaignCreator] = Campaign
         (
             {
             campaignName: _campaignName,
@@ -78,12 +78,12 @@ contract CrowdfyFabric{
             fundingCap: _fundingCap,
             deadline: _deadline,
             beneficiary: _beneficiaryAddress,
-            owner: msg.sender,
+            owner: campaignCreator,
             created: block.timestamp
             }
         );
 
-        emit CampaignCreated(_campaignName, msg.sender, _beneficiaryAddress, _fundingCap, block.timestamp, _deadline, cloneContract);
+        emit CampaignCreated(_campaignName, campaignCreator, _beneficiaryAddress, _fundingCap, block.timestamp, _deadline, cloneContract);
 
         return true;
     }
@@ -92,8 +92,6 @@ contract CrowdfyFabric{
     function getCampaignsLength() external view returns(uint256){
         return campaigns.length;
     }
-
-
 
 }
 

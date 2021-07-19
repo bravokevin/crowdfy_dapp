@@ -64,7 +64,7 @@ contract('CrowdfyFabric', accounts => {
             expect.fail()
         }
         catch(err){
-            expect(err.reason).to.equal('Your duedate have to be major than the current time');
+            expect(err.reason).to.equal( "Your duedate have to be major than the current time");
         }
     })
 })

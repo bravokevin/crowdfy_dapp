@@ -6,7 +6,7 @@ import "./CrowdfyI.sol";
 ///@title crowdfy crowdfunding contract
 contract Crowdfy is CrowdfyI {
     
-    /**ENUMS */
+    //** **************** ENUMS ********************** */
 
     //The posible states of the campaign
     enum State {
@@ -16,14 +16,16 @@ contract Crowdfy is CrowdfyI {
         Finalized
     }
 
+    //** **************** EVENTS ********************** */
 
-        /** EVENTS */
     event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
     event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
     event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
-    event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); //fire when the contributor recive the founds if the campaign fails
-
+    //fire when the contributor recive the founds if the campaign fails
+    event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
     event CampaignFinished(string _message);
+
+    //** **************** STRUCTS ********************** */
 
     //Campaigns dataStructure
     struct Campaign  {
@@ -46,20 +48,29 @@ contract Crowdfy is CrowdfyI {
         uint time;
     }
 
-    Contribution[] public contributions;
+    //** **************** STATE VARIABLES ********************** */
 
+    Contribution[] public contributions;
     // all contributions id's of an
     mapping(address => uint[]) public contributionsByPeople;
 
     Campaign public newCampaign;
 
-     /** MODIFIERS  */
+
+    //** **************** MODIFIERS ********************** */
+
     modifier inState(State _expectedState){
-        require(state() == uint8(_expectedState), "This function is not permited in this state of the campaign");
+        require(state() == uint8(_expectedState), "Not Permited during this state of the campaign");
         _;
     }
     
-    ///@notice allows users to contribute to the campaign, as the campaign is in the onoging state. Sets minimumCollected to true if the minimum amount is reached,emmit an event to let know to the user.
+    //** **************** FUNCTIONS CODE ********************** */
+
+
+    /**@notice allows users to contribute to the campaign, as the campaign is in the onoging state.
+     Sets minimumCollected to true if the minimum amount is reached.
+     emmit ContributionMaden event.*/
+
     function contribute() external payable inState(State.Ongoing){
 
         require(msg.value > 0, "Put A correct amount");
@@ -158,16 +169,22 @@ contract Crowdfy is CrowdfyI {
         
     }
 
+
+    /**@notice creates a new instance campaign
+        @dev use CREATE in the factory contract 
+        REQUIREMENTS:
+            due date must be major than the current block time
+     */
     function initializeCampaign
     (
         string memory _campaignName,
         uint _fundingGoal,
         uint _deadline,
         uint _fundingCap,
-        address _beneficiaryAddress
-    ) public
+        address _beneficiaryAddress,
+        address _campaignCreator
+    ) external
     {
-
         require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
 
         newCampaign = Campaign(
@@ -177,7 +194,7 @@ contract Crowdfy is CrowdfyI {
             fundingCap: _fundingCap,
             deadline: _deadline,
             beneficiary: _beneficiaryAddress,
-            owner: tx.origin,
+            owner: _campaignCreator,
             created: block.timestamp,
             minimumCollected: false,
             state: State.Ongoing,
