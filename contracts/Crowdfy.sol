@@ -23,7 +23,8 @@ contract Crowdfy is CrowdfyI {
     event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
     //fire when the contributor recive the founds if the campaign fails
     event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
-    event CampaignFinished(string _message);
+    event CampaignFinished(string _message, uint256 _timeOfFinalization);
+    event CampaignStateChange(State _currentState);
 
     //** **************** STRUCTS ********************** */
 
@@ -50,12 +51,12 @@ contract Crowdfy is CrowdfyI {
 
     //** **************** STATE VARIABLES ********************** */
 
+    //all the contribution made
     Contribution[] public contributions;
-    // all contributions id's of an
-    mapping(address => uint[]) public contributionsByPeople;
+    // contributions made by people
+    mapping(address => Contribution[]) public contributionsByPeople;
 
-    Campaign public newCampaign;
-
+    Campaign public theCampaign;
 
     //** **************** MODIFIERS ********************** */
 
@@ -71,57 +72,65 @@ contract Crowdfy is CrowdfyI {
      Sets minimumCollected to true if the minimum amount is reached.
      emmit ContributionMaden event.*/
 
-    function contribute() external payable inState(State.Ongoing){
+    function contribute(uint256 _contributionValue) external payable inState(State.Ongoing){
 
-        require(msg.value > 0, "Put A correct amount");
+        require(_contributionValue > 0, "Put a correct amount");
             
-        Contribution memory newContribution = Contribution({sender: msg.sender, value: msg.value, time: block.timestamp});
+        Contribution memory newContribution = Contribution(
+            {
+                sender: msg.sender, 
+                value: _contributionValue, 
+                time: block.timestamp
+            });
 
         contributions.push(newContribution);
 
-        uint contributionID = (contributions.length) + 1;
+        contributionsByPeople[msg.sender].push(newContribution);
 
-        contributionsByPeople[msg.sender].push(contributionID);
-
-        newCampaign.amountRised += msg.value;
+        theCampaign.amountRised += _contributionValue;
 
         emit ContributionMade(newContribution);
 
-        if(newCampaign.amountRised >= newCampaign.fundingCap){
-            newCampaign.minimumCollected = true;
-            emit MinimumReached("The minimum value has reached");
-            if((newCampaign.deadline < block.timestamp 
-                 && newCampaign.amountRised >= newCampaign.fundingGoal)
-                 || newCampaign.amountRised >= newCampaign.fundingCap)
+        if(theCampaign.amountRised >= theCampaign.fundingGoal){
+            theCampaign.minimumCollected = true;
+
+            emit MinimumReached("The minimum value has been reached");
+
+            if((theCampaign.deadline < block.timestamp 
+                 && theCampaign.amountRised >= theCampaign.fundingCap)
+                 || theCampaign.amountRised >= theCampaign.fundingCap)
                 {
-                newCampaign.state = State.Succeded;
+                theCampaign.state = State.Succeded;
+
+                emit CampaignStateChange(State.Succeded);
+
                 }
         }
     }
     
 
-
-
-    ///@notice evaluates the current state of the campaign, its used for the "inState" modifier
+    /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
+    
+    @dev 
+    */
     function state() private view returns(uint8 _state) {
 
-        if(newCampaign.deadline > block.timestamp 
-        && newCampaign.minimumCollected == false
-        && newCampaign.amountRised < newCampaign.fundingCap)
+        if(theCampaign.deadline > block.timestamp 
+        && theCampaign.minimumCollected == false
+        && theCampaign.amountRised < theCampaign.fundingCap)
         {
             return uint8(State.Ongoing);
         }   
 
-        else if((newCampaign.deadline < block.timestamp 
-        && newCampaign.amountRised >= newCampaign.fundingGoal)
-        || newCampaign.amountRised >= newCampaign.fundingCap)
+        else if(theCampaign.amountRised >= theCampaign.fundingGoal
+        || theCampaign.amountRised >= theCampaign.fundingCap)
         {
             return uint8(State.Succeded);
         }
 
-        else if(block.timestamp > newCampaign.deadline 
-        && newCampaign.minimumCollected == false 
-        && newCampaign.amountRised < newCampaign.fundingGoal)
+        else if(theCampaign.deadline < block.timestamp
+        && theCampaign.minimumCollected == false 
+        && theCampaign.amountRised < theCampaign.fundingGoal)
         {
             return uint8(State.Failed);
         }
@@ -129,43 +138,40 @@ contract Crowdfy is CrowdfyI {
 
     ///@notice this function ITS ONLY for test porpuses
     function setDate() external {
-        newCampaign.deadline = 3;
+        theCampaign.deadline = 3;
 
     }
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
     function withdraw() external payable inState(State.Succeded){
-        require(newCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
+        require(theCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
 
-        payable(newCampaign.beneficiary).transfer(newCampaign.amountRised);
+        payable(theCampaign.beneficiary).transfer(theCampaign.amountRised);
 
-        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", newCampaign.beneficiary);
+        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", theCampaign.beneficiary);
         
-        newCampaign.state = State.Finalized;
+        theCampaign.state = State.Finalized;
 
-        emit CampaignFinished("The campaign was finished succesfull");
+        emit CampaignFinished("The campaign was finished succesfull", block.timestamp);
     }
 
 
     ///@notice claim a refund if the campaign was failed and only if you are a contributor
     ///@dev this follows the withdraw pattern to prevent reentrancy
     function claimFounds () external payable inState(State.Failed) {
+        uint256 allContributions = contributionsByPeople[msg.sender].length;
+        require(allContributions > 0, 'You didnt contributed');
+        
+        uint256 contributionsIndex = allContributions - 1;
+        uint256 amountToWithdraw;
 
-        for(uint i = 0; i < contributionsByPeople[msg.sender].length; i++){
-            
-            uint theContributionID = i++;
-
-            if(contributions[theContributionID].value != 0){
-
-                if(address(this).balance >= contributions[theContributionID].value){
-                    payable(contributions[theContributionID].sender).transfer(contributions[theContributionID].value);
-                    contributions[theContributionID].value = 0;
-                    emit ContributorRefounded(contributions[theContributionID].sender, contributions[theContributionID].value);
-                }
-                    
-            }
-
+        for(uint256 i = 0; i <= allContributions; i++){
+            amountToWithdraw += contributionsByPeople[msg.sender][contributionsIndex].value;
+            contributionsByPeople[msg.sender][contributionsIndex].value = 0;
+            contributionsIndex--;
         }
+        payable(msg.sender).transfer(amountToWithdraw);
+        emit ContributorRefounded(msg.sender, amountToWithdraw);
         
     }
 
@@ -187,7 +193,7 @@ contract Crowdfy is CrowdfyI {
     {
         require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
 
-        newCampaign = Campaign(
+        theCampaign = Campaign(
             {
             campaignName: _campaignName,
             fundingGoal: _fundingGoal,

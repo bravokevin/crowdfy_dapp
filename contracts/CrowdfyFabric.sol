@@ -10,11 +10,11 @@ contract CrowdfyFabric{
 
     //** **************** STATE VARIABLES ********************** */
 
-    //Stores all campaign addresses
-    address[] public campaigns;
+    //Stores all campaign structure
+    Campaign[] public campaigns;
 
-    //stores the campaigns 
-    mapping(address => Campaign) public campaignsByUser;
+    //points each campaigns adddress to an identifier.
+    mapping(uint => address) public campaignsById;
 
     //the address of the base campaign contract implementation
     address immutable campaignImplementation;
@@ -42,12 +42,13 @@ contract CrowdfyFabric{
 
     struct Campaign  {
         string  campaignName;
-        uint fundingGoal;//the minimum amount that the campaigns required
-        uint fundingCap; //the maximum amount that the campaigns required
-        uint deadline;
+        uint256 fundingGoal;//the minimum amount that the campaigns required
+        uint256 fundingCap; //the maximum amount that the campaigns required
+        uint256 deadline;
         address beneficiary;//the beneficiary of the campaign
         address owner;//the creator of the campaign
-        uint created; // the time when the campaign was created 
+        uint256 created; // the time when the campaign was created 
+        address campaignAddress;
     }
 
 
@@ -60,32 +61,42 @@ contract CrowdfyFabric{
         uint _deadline, 
         uint _fundingCap, 
         address _beneficiaryAddress
-    ) external returns(bool) {
+    ) external returns(uint256) {
 
         address campaignCreator = msg.sender;
         
         address cloneContract = Clones.clone(campaignImplementation);
 
-        Crowdfy(cloneContract).initializeCampaign(_campaignName, _fundingGoal, _deadline, _fundingCap, _beneficiaryAddress, campaignCreator);
-
-        campaigns.push(cloneContract);
-
-        campaignsByUser[campaignCreator] = Campaign
-        (
-            {
-            campaignName: _campaignName,
-            fundingGoal: _fundingGoal,
-            fundingCap: _fundingCap,
-            deadline: _deadline,
-            beneficiary: _beneficiaryAddress,
-            owner: campaignCreator,
-            created: block.timestamp
-            }
+        Crowdfy(cloneContract).initializeCampaign(
+            _campaignName,
+             _fundingGoal, 
+            _deadline,
+            _fundingCap, 
+            _beneficiaryAddress, 
+            campaignCreator
         );
+
+       campaigns.push(Campaign(
+                {
+                campaignName: _campaignName,
+                fundingGoal: _fundingGoal,
+                fundingCap: _fundingCap,
+                deadline: _deadline,
+                beneficiary: _beneficiaryAddress,
+                owner: campaignCreator,
+                created: block.timestamp,
+                campaignAddress: cloneContract
+                }
+            )
+        );
+
+        uint256 campaignId = campaigns.length -1;
+
+        campaignsById[campaignId] = cloneContract;
 
         emit CampaignCreated(_campaignName, campaignCreator, _beneficiaryAddress, _fundingCap, block.timestamp, _deadline, cloneContract);
 
-        return true;
+        return campaignId;
     }
 
     ///@notice gets the number of campaigns created

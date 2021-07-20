@@ -8,7 +8,7 @@ contract('CrowdfyFabric', accounts => {
     let beneficiary = accounts[2];
 
     const destructCampaign = (struct) => {
-        const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised } = struct;
+        const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised, index } = struct;
 
         return {
             campaignName,
@@ -17,7 +17,7 @@ contract('CrowdfyFabric', accounts => {
             deadline: Number(deadline),
             beneficiary,
             owner,
-            created: Number(created),
+            created: Number(created)
         }
     };
 
@@ -32,18 +32,22 @@ contract('CrowdfyFabric', accounts => {
     })
 
     it("should create a campaign instance correctly", async () =>{
-        const campaignContract = await contract.createCampaign("My Campaign",
+        await contract.createCampaign("My Campaign",
         1000000,
         CREATION_TIME,
         2000000,
         beneficiary, {from: userCampaignCreator});
 
+        
+
         const  campaignLength = await contract.getCampaignsLength.call();
         expect(Number(campaignLength)).to.equal(1)
 
-        const campaignByUserStruct = await contract.campaignsByUser.call(userCampaignCreator)
+        const campaignAddress = await contract.campaignsById.call(0)
 
-        const destructuredCampaign = destructCampaign(campaignByUserStruct);
+        const campaignStruct = await contract.campaigns.call(0)
+
+        const destructuredCampaign = destructCampaign(campaignStruct);
 
         expect(destructuredCampaign.campaignName).to.equal('My Campaign');
         expect(destructuredCampaign.fundingGoal).to.equal(1000000);
