@@ -31,15 +31,15 @@ contract Crowdfy is CrowdfyI {
     //Campaigns dataStructure
     struct Campaign  {
         string  campaignName;
-        uint fundingGoal;//the minimum amount that the campaigns required
-        uint fundingCap; //the maximum amount that the campaigns required
-        uint deadline;
+        uint256 fundingGoal;//the minimum amount that the campaigns required
+        uint256 fundingCap; //the maximum amount that the campaigns required
+        uint256 deadline;
         address beneficiary;//the beneficiary of the campaign
         address owner;//the creator of the campaign
-        uint created; // the time when the campaign was created
+        uint256 created; // the time when the campaign was created
         bool minimumCollected; //to see if we minimumCollected the enough amount of foounds
         State state; //the current state of the campaign
-        uint amountRised;  
+        uint256 amountRised;  
     }
 
     //Contribution datastructure
@@ -72,14 +72,13 @@ contract Crowdfy is CrowdfyI {
      Sets minimumCollected to true if the minimum amount is reached.
      emmit ContributionMaden event.*/
 
-    function contribute(uint256 _contributionValue) external payable inState(State.Ongoing){
+    function contribute() external payable inState(State.Ongoing){
 
-        require(_contributionValue > 0, "Put a correct amount");
-            
+        require(msg.value > 0, "Put a correct amount");  
         Contribution memory newContribution = Contribution(
             {
                 sender: msg.sender, 
-                value: _contributionValue, 
+                value: msg.value, 
                 time: block.timestamp
             });
 
@@ -87,7 +86,7 @@ contract Crowdfy is CrowdfyI {
 
         contributionsByPeople[msg.sender].push(newContribution);
 
-        theCampaign.amountRised += _contributionValue;
+        theCampaign.amountRised += msg.value;
 
         emit ContributionMade(newContribution);
 
@@ -96,7 +95,7 @@ contract Crowdfy is CrowdfyI {
 
             emit MinimumReached("The minimum value has been reached");
 
-            if((theCampaign.deadline < block.timestamp 
+            if((theCampaign.deadline > block.timestamp 
                  && theCampaign.amountRised >= theCampaign.fundingCap)
                  || theCampaign.amountRised >= theCampaign.fundingCap)
                 {
@@ -116,14 +115,13 @@ contract Crowdfy is CrowdfyI {
     function state() private view returns(uint8 _state) {
 
         if(theCampaign.deadline > block.timestamp 
-        && theCampaign.minimumCollected == false
         && theCampaign.amountRised < theCampaign.fundingCap)
         {
             return uint8(State.Ongoing);
         }   
 
-        else if(theCampaign.amountRised >= theCampaign.fundingGoal
-        || theCampaign.amountRised >= theCampaign.fundingCap)
+        else if(theCampaign.amountRised >= theCampaign.fundingCap || 
+        theCampaign.amountRised >= theCampaign.fundingGoal)
         {
             return uint8(State.Succeded);
         }
@@ -139,14 +137,20 @@ contract Crowdfy is CrowdfyI {
     ///@notice this function ITS ONLY for test porpuses
     function setDate() external {
         theCampaign.deadline = 3;
+        state();
 
     }
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
     function withdraw() external payable inState(State.Succeded){
-        require(theCampaign.beneficiary == tx.origin, "Only the beneficiary can call this function");
+        require(theCampaign.beneficiary == msg.sender, "Only the beneficiary can call this function");
 
-        payable(theCampaign.beneficiary).transfer(theCampaign.amountRised);
+        uint toWithdraw = theCampaign.amountRised;
+
+        theCampaign.amountRised = 0;
+
+        (bool success, ) = payable(theCampaign.beneficiary).call{value:toWithdraw}("");
+        require(success, "Failed to send Ether");
 
         emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", theCampaign.beneficiary);
         
@@ -170,7 +174,8 @@ contract Crowdfy is CrowdfyI {
             contributionsByPeople[msg.sender][contributionsIndex].value = 0;
             contributionsIndex--;
         }
-        payable(msg.sender).transfer(amountToWithdraw);
+         (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
+        require(success, "Failed to send Ether");
         emit ContributorRefounded(msg.sender, amountToWithdraw);
         
     }
@@ -196,10 +201,10 @@ contract Crowdfy is CrowdfyI {
         theCampaign = Campaign(
             {
             campaignName: _campaignName,
-            fundingGoal: _fundingGoal,
-            fundingCap: _fundingCap,
+            fundingGoal:  etherToWei(_fundingGoal),
+            fundingCap: etherToWei(_fundingCap),
             deadline: _deadline,
-            beneficiary: _beneficiaryAddress,
+            beneficiary:_beneficiaryAddress,
             owner: _campaignCreator,
             created: block.timestamp,
             minimumCollected: false,
@@ -207,5 +212,10 @@ contract Crowdfy is CrowdfyI {
             amountRised: 0
             });
     }
+
+        function etherToWei(uint _sumInEth) public pure returns (uint){
+        return _sumInEth * 1 ether;
+    }
+
 }
 
