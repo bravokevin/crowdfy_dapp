@@ -42,12 +42,14 @@ contract('Crowdfy', (accounts) => {
 
     //allows us to destruct the contribution struct
     const destructContribution = contribution => {
-        const { sender, value, time } = contribution;
+        const { sender, value, time, numberOfContributions, hasContribute } = contribution;
 
         return {
             sender,
             value: Number(value),
-            time
+            time,
+            numberOfContributions: Number(numberOfContributions),
+            hasContribute
         }
     }
 
@@ -89,7 +91,7 @@ contract('Crowdfy', (accounts) => {
 
     });
 
-    describe('contributions', async () => {
+    describe.only('contributions', async () => {
 
         it("should contribute founds", async () => {
 
@@ -112,6 +114,9 @@ contract('Crowdfy', (accounts) => {
             let contributionDestructured = destructContribution(contributions);
             expect(contributionDestructured.sender).to.equal(contributor1);
             expect(contributionDestructured.value).to.equal(ONE_ETH - 200000000);
+            expect(contributionDestructured.numberOfContributions).to.equal(1);
+
+
         })
 
         it('should not allowed to contribute 0 < ', async () => {
@@ -155,7 +160,7 @@ contract('Crowdfy', (accounts) => {
         })
 
         it("should not contribute after deadline", async () => {
-            contract.setDate({ from: userCampaignCreator });
+            await contract.setDate({ from: userCampaignCreator });
 
             try {
                 await contract.contribute(
@@ -168,6 +173,33 @@ contract('Crowdfy', (accounts) => {
             catch (error) {
                 expect(error.reason).to.equal("Not Permited during this state of the campaign");
             }
+        })
+        it('should have multiple contrubitions', async () =>{
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 4
+                });
+
+            await contract.contribute(
+                {
+                from: contributor1,
+                value: ONE_ETH / 4
+                });
+
+            await contract.contribute(
+                {
+                from: contributor1,
+                value: ONE_ETH / 4
+                });
+
+            const contributions = await contract.contributions.call(0);
+            let contributionDestructured = destructContribution(contributions);
+
+            expect(contributionDestructured.sender).to.equal(contributor1);
+            expect(contributionDestructured.value).to.equal(750000000000000000);
+            expect(contributionDestructured.numberOfContributions).to.equal(3);
+
         })
     })
 
@@ -414,8 +446,10 @@ contract('Crowdfy', (accounts) => {
 
     })
 
-    describe.only('Refunding', async () => {
+    describe('Refunding', async () => {
         it('should allow contributes to refound in case of failure', async () => {
+        let balanceIncial = await web3.eth.getBalance(contributor1)
+
         await contract.contribute(
             {
                 from: contributor1,
@@ -429,8 +463,19 @@ contract('Crowdfy', (accounts) => {
            });
 
         await contract.setDate({ from: userCampaignCreator });
-
         await contract.claimFounds({ from: contributor1 })
+
+        let txInfo = await contract.claimFounds({ from: contributor1 })
+
+        const tx = await web3.eth.getTransaction(txInfo.tx);
+
+        let balanceFinal = await web3.eth.getBalance(contributor1)
+
+        //NOTICE = idk where those 6100 come from
+        expect(
+            (balanceFinal - balanceInicial) + (tx.gasPrice * txInfo.receipt.gasUsed)
+            ).to.equal(ONE_ETH + 6100)
+
         })
 
 
@@ -469,26 +514,25 @@ contract('Crowdfy', (accounts) => {
 
         })
 
-        // it('should not allowed to refound twice', async () => {
-        //     await contract.contribute(
-        //         {
-        //             from: contributor1,
-        //             value: ONE_ETH / 3
-        //         });
+        it('should not allowed to refound twice', async () => {
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 3
+                });
                 
-        //     contract.setDate({ from: userCampaignCreator });
-        //     await contract.claimFounds({ from: contributor1 })
+            contract.setDate({ from: userCampaignCreator });
+            await contract.claimFounds({ from: contributor1 })
 
-        //     try {
-        //         await contract.claimFounds({ from: contributor1 })
-        //         expect.fail()
+            try {
+                await contract.claimFounds({ from: contributor1 })
+                expect.fail()
 
-        //     }
-        //     catch (error) {
-        //         expect(error.reason).to.equal("you already has been refunded")
-        //     }
-
-        // })
+            }
+            catch (error) {
+                expect(error.reason).to.equal("you already has been refunded")
+            }
+        })
     })
 
 })

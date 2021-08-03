@@ -45,8 +45,9 @@ contract Crowdfy is CrowdfyI {
     //Contribution datastructure
     struct Contribution {
         address sender;
-        uint value;
-        uint time;
+        uint256 value;
+        uint256 time;
+        uint256 numberOfContributions;
     }
 
     //** **************** STATE VARIABLES ********************** */
@@ -54,12 +55,14 @@ contract Crowdfy is CrowdfyI {
     //all the contribution made
     Contribution[] public contributions;
     // contributions made by people
-    mapping(address => Contribution[]) public contributionsByPeople;
+    mapping(address => Contribution) public contributionsByPeople;
 
     Campaign public theCampaign;
 
     //keeps track if a contributor has already been refunded
     mapping(address => bool) hasRefunded;
+    //keeps track if a contributor has already been contributed
+    mapping(address => bool) hasContributed;
 
     //** **************** MODIFIERS ********************** */
 
@@ -76,22 +79,29 @@ contract Crowdfy is CrowdfyI {
      emmit ContributionMaden event.*/
 
     function contribute() external payable inState(State.Ongoing){
-
-        require(msg.value > 0, "Put a correct amount");  
-        Contribution memory newContribution = Contribution(
+        require(msg.value > 0, "Put a correct amount"); 
+        if(hasContributed[msg.sender]){
+            Contribution storage contribution = contributionsByPeople[msg.sender];
+            contribution.value += msg.value;
+            contribution.numberOfContributions++;
+        }
+        else{
+        Contribution memory newContribution; 
+        contributionsByPeople[msg.sender] = newContribution = Contribution(
             {
                 sender: msg.sender, 
                 value: msg.value, 
-                time: block.timestamp
+                time: block.timestamp,
+                numberOfContributions: 1
             });
-
+            
         contributions.push(newContribution);
-
-        contributionsByPeople[msg.sender].push(newContribution);
+        hasContributed[msg.sender] = true;
+        }
 
         theCampaign.amountRised += msg.value;
 
-        emit ContributionMade(newContribution);
+        emit ContributionMade(contributionsByPeople[msg.sender]);
 
         if(theCampaign.amountRised >= theCampaign.fundingGoal){
             theCampaign.minimumCollected = true;
@@ -168,18 +178,12 @@ contract Crowdfy is CrowdfyI {
     */
     function claimFounds () external payable inState(State.Failed) {
         require(hasRefunded[msg.sender] == false, "you already has been refunded");
-        uint256 allContributions = contributionsByPeople[msg.sender].length;
+        uint256 allContributions = contributionsByPeople[msg.sender].numberOfContributions;
         require(allContributions > 0, 'You didnt contributed');
+   
+        uint256 amountToWithdraw = contributionsByPeople[msg.sender].value;
+        contributionsByPeople[msg.sender].value = 0;
         
-        uint256 contributionsIndex = allContributions - 1;
-        uint256 amountToWithdraw;
-
-        for(uint256 i = 0; i <= allContributions; i++){
-            amountToWithdraw += contributionsByPeople[msg.sender][contributionsIndex].value;
-            contributionsByPeople[msg.sender][contributionsIndex].value = 0;
-            contributionsIndex--;
-        }
-
         (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
         require(success, "Failed to send Ether");
         emit ContributorRefounded(msg.sender, amountToWithdraw);
