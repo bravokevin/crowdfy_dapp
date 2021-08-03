@@ -192,13 +192,25 @@ contract('Crowdfy', (accounts) => {
                 from: contributor1,
                 value: ONE_ETH / 4
                 });
+                
+            await contract.contribute(
+                {
+                from: contributor2,
+                value: ONE_ETH / 4
+                });
 
-            const contributions = await contract.contributions.call(0);
+
+            const contributions = await contract.contributionsByPeople.call(contributor1);
             let contributionDestructured = destructContribution(contributions);
 
             expect(contributionDestructured.sender).to.equal(contributor1);
             expect(contributionDestructured.value).to.equal(750000000000000000);
             expect(contributionDestructured.numberOfContributions).to.equal(3);
+
+            //NOTICE we have to know the length of the array
+            // expect(await contract.contributions.length).to.equal(4);
+
+
 
         })
     })

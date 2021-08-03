@@ -57,6 +57,7 @@ contract Crowdfy is CrowdfyI {
     // contributions made by people
     mapping(address => Contribution) public contributionsByPeople;
 
+    //the actual campaign
     Campaign public theCampaign;
 
     //keeps track if a contributor has already been refunded
@@ -81,9 +82,12 @@ contract Crowdfy is CrowdfyI {
     function contribute() external payable inState(State.Ongoing){
         require(msg.value > 0, "Put a correct amount"); 
         if(hasContributed[msg.sender]){
-            Contribution storage contribution = contributionsByPeople[msg.sender];
-            contribution.value += msg.value;
-            contribution.numberOfContributions++;
+            Contribution storage theContribution = contributionsByPeople[msg.sender];
+            theContribution.value += msg.value;
+            theContribution.numberOfContributions++;
+
+            contributions.push(theContribution);
+
         }
         else{
         Contribution memory newContribution; 
@@ -96,6 +100,7 @@ contract Crowdfy is CrowdfyI {
             });
             
         contributions.push(newContribution);
+
         hasContributed[msg.sender] = true;
         }
 
@@ -223,9 +228,8 @@ contract Crowdfy is CrowdfyI {
             });
     }
 
-        function etherToWei(uint _sumInEth) public pure returns (uint){
+        function etherToWei(uint _sumInEth) private pure returns (uint){
         return _sumInEth * 1 ether;
     }
-
 }
 
