@@ -58,6 +58,9 @@ contract Crowdfy is CrowdfyI {
 
     Campaign public theCampaign;
 
+    //keeps track if a contributor has already been refunded
+    mapping(address => bool) hasRefunded;
+
     //** **************** MODIFIERS ********************** */
 
     modifier inState(State _expectedState){
@@ -138,7 +141,6 @@ contract Crowdfy is CrowdfyI {
     function setDate() external {
         theCampaign.deadline = 3;
         state();
-
     }
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
@@ -160,9 +162,12 @@ contract Crowdfy is CrowdfyI {
     }
 
 
-    ///@notice claim a refund if the campaign was failed and only if you are a contributor
-    ///@dev this follows the withdraw pattern to prevent reentrancy
+    /**@notice claim a refund if the campaign was failed and only if you are a contributor
+    @dev this follows the withdraw pattern to prevent reentrancy
+    the function use a for loop for iterate over all the contributions that a contributor made
+    */
     function claimFounds () external payable inState(State.Failed) {
+        require(hasRefunded[msg.sender] == false, "you already has been refunded");
         uint256 allContributions = contributionsByPeople[msg.sender].length;
         require(allContributions > 0, 'You didnt contributed');
         
@@ -174,10 +179,11 @@ contract Crowdfy is CrowdfyI {
             contributionsByPeople[msg.sender][contributionsIndex].value = 0;
             contributionsIndex--;
         }
-         (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
+
+        (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
         require(success, "Failed to send Ether");
         emit ContributorRefounded(msg.sender, amountToWithdraw);
-        
+        hasRefunded[msg.sender] == true;
     }
 
 
