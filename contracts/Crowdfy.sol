@@ -85,9 +85,7 @@ contract Crowdfy is CrowdfyI {
             Contribution storage theContribution = contributionsByPeople[msg.sender];
             theContribution.value += msg.value;
             theContribution.numberOfContributions++;
-
             contributions.push(theContribution);
-
         }
         else{
         Contribution memory newContribution; 
@@ -100,12 +98,10 @@ contract Crowdfy is CrowdfyI {
             });
             
         contributions.push(newContribution);
-
         hasContributed[msg.sender] = true;
         }
 
         theCampaign.amountRised += msg.value;
-
         emit ContributionMade(contributionsByPeople[msg.sender]);
 
         if(theCampaign.amountRised >= theCampaign.fundingGoal){
@@ -182,17 +178,14 @@ contract Crowdfy is CrowdfyI {
     the function use a for loop for iterate over all the contributions that a contributor made
     */
     function claimFounds () external payable inState(State.Failed) {
-        require(hasRefunded[msg.sender] == false, "you already has been refunded");
-        uint256 allContributions = contributionsByPeople[msg.sender].numberOfContributions;
-        require(allContributions > 0, 'You didnt contributed');
-   
+        require(hasContributed[msg.sender], 'You didnt contributed');
+        require(!hasRefunded[msg.sender], "You already has been refunded");
         uint256 amountToWithdraw = contributionsByPeople[msg.sender].value;
         contributionsByPeople[msg.sender].value = 0;
-        
         (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
         require(success, "Failed to send Ether");
+        hasRefunded[msg.sender] = true;
         emit ContributorRefounded(msg.sender, amountToWithdraw);
-        hasRefunded[msg.sender] == true;
     }
 
 
