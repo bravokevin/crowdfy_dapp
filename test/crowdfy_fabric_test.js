@@ -36,7 +36,8 @@
 //         1000000,
 //         CREATION_TIME,
 //         2000000,
-//         beneficiary, {from: userCampaignCreator});
+//         beneficiary,
+//          "ipfsHash" {from: userCampaignCreator});
 
         
 

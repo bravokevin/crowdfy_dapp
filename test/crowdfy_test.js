@@ -61,11 +61,13 @@ contract('Crowdfy', (accounts) => {
             }
         )
 
-        await contractFactory.createCampaign("My Campaign",
+        await contractFactory.createCampaign(
+            "My Campaign",
             1,
             CREATION_TIME,
             1,
             beneficiary,
+            "IPFSHash",
             { from: userCampaignCreator }
         );
 
@@ -91,7 +93,7 @@ contract('Crowdfy', (accounts) => {
 
     });
 
-    describe('contributions', async () => {
+    describe.only('contributions', async () => {
 
         it("should contribute founds", async () => {
 

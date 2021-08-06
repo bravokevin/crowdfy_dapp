@@ -40,6 +40,7 @@ contract Crowdfy is CrowdfyI {
         bool minimumCollected; //to see if we minimumCollected the enough amount of foounds
         State state; //the current state of the campaign
         uint256 amountRised;  
+        string ipfsHash;
     }
 
     //Contribution datastructure
@@ -114,9 +115,6 @@ contract Crowdfy is CrowdfyI {
                  || theCampaign.amountRised >= theCampaign.fundingCap)
                 {
                 theCampaign.state = State.Succeded;
-
-                emit CampaignStateChange(State.Succeded);
-
                 }
         }
     }
@@ -201,7 +199,8 @@ contract Crowdfy is CrowdfyI {
         uint _deadline,
         uint _fundingCap,
         address _beneficiaryAddress,
-        address _campaignCreator
+        address _campaignCreator,
+        string memory _ipfsHash
     ) external
     {
         require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
@@ -217,7 +216,8 @@ contract Crowdfy is CrowdfyI {
             created: block.timestamp,
             minimumCollected: false,
             state: State.Ongoing,
-            amountRised: 0
+            amountRised: 0,
+            ipfsHash: _ipfsHash
             });
     }
 

@@ -60,7 +60,8 @@ contract CrowdfyFabric{
         uint _fundingGoal, 
         uint _deadline, 
         uint _fundingCap, 
-        address _beneficiaryAddress
+        address _beneficiaryAddress,
+        string calldata _ipfsHash
     ) external returns(uint256) {
 
         address campaignCreator = msg.sender;
@@ -73,7 +74,8 @@ contract CrowdfyFabric{
             _deadline,
             _fundingCap, 
             _beneficiaryAddress, 
-            campaignCreator
+            campaignCreator,
+            _ipfsHash
         );
 
        campaigns.push(Campaign(
