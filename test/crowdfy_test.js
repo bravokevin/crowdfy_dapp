@@ -93,7 +93,7 @@ contract('Crowdfy', (accounts) => {
 
     });
 
-    describe.only('contributions', async () => {
+    describe('contributions', async () => {
 
         it("should contribute founds", async () => {
 

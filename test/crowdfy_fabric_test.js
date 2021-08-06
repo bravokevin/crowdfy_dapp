@@ -1,75 +1,74 @@
-// const CrowdfyFabricContract = artifacts.require('./CrowdfyFabric');
+const CrowdfyFabricContract = artifacts.require('./CrowdfyFabric');
 
-// contract('CrowdfyFabric', accounts => {
+contract('CrowdfyFabric', accounts => {
 
-//     let contract;
-//     let contractImplementationCreator = accounts[0];
-//     let userCampaignCreator = accounts[1];
-//     let beneficiary = accounts[2];
+    let contract;
+    let contractImplementationCreator = accounts[0];
+    let userCampaignCreator = accounts[1];
+    let beneficiary = accounts[2];
 
-//     const destructCampaign = (struct) => {
-//         const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised, index } = struct;
+    const destructCampaign = (struct) => {
+        const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised, index } = struct;
 
-//         return {
-//             campaignName,
-//             fundingGoal: Number(fundingGoal),
-//             fundingCap: Number(fundingCap),
-//             deadline: Number(deadline),
-//             beneficiary,
-//             owner,
-//             created: Number(created)
-//         }
-//     };
+        return {
+            campaignName,
+            fundingGoal: Number(fundingGoal),
+            fundingCap: Number(fundingCap),
+            deadline: Number(deadline),
+            beneficiary,
+            owner,
+            created: Number(created)
+        }
+    };
 
-//     const CREATION_TIME = 1686614159;
+    const CREATION_TIME = 1686614159;
     
-//     before(async () => {
-//         contract = await CrowdfyFabricContract.new(
-//             {
-//                 from: contractImplementationCreator
-//             }
-//         )
-//     })
+    before(async () => {
+        contract = await CrowdfyFabricContract.new(
+            {
+                from: contractImplementationCreator
+            }
+        )
+    })
 
-//     it("should create a campaign instance correctly", async () =>{
-//         await contract.createCampaign("My Campaign",
-//         1000000,
-//         CREATION_TIME,
-//         2000000,
-//         beneficiary,
-//          "ipfsHash" {from: userCampaignCreator});
-
+    it("should create a campaign instance correctly", async () =>{
+        await contract.createCampaign("My Campaign",
+        1000000,
+        CREATION_TIME,
+        2000000,
+        beneficiary,
+         "ipfsHash", {from: userCampaignCreator});
         
+        const  campaignLength = await contract.getCampaignsLength.call();
 
-//         const  campaignLength = await contract.getCampaignsLength.call();
-//         expect(Number(campaignLength)).to.equal(1)
+        expect(Number(campaignLength)).to.equal(1)
 
-//         const campaignAddress = await contract.campaignsById.call(0)
+        const campaignAddress = await contract.campaignsById.call(0)
 
-//         const campaignStruct = await contract.campaigns.call(0)
+        const campaignStruct = await contract.campaigns.call(0)
 
-//         const destructuredCampaign = destructCampaign(campaignStruct);
+        const destructuredCampaign = destructCampaign(campaignStruct);
 
-//         expect(destructuredCampaign.campaignName).to.equal('My Campaign');
-//         expect(destructuredCampaign.fundingGoal).to.equal(1000000);
-//         expect(destructuredCampaign.fundingCap).to.equal(2000000);
-//         expect(destructuredCampaign.deadline).to.equal(CREATION_TIME)
-//         expect(destructuredCampaign.beneficiary).to.equal(beneficiary);
-//         expect(destructuredCampaign.owner).to.equal(userCampaignCreator);
-//     })
+        expect(destructuredCampaign.campaignName).to.equal('My Campaign');
+        expect(destructuredCampaign.fundingGoal).to.equal(1000000);
+        expect(destructuredCampaign.fundingCap).to.equal(2000000);
+        expect(destructuredCampaign.deadline).to.equal(CREATION_TIME)
+        expect(destructuredCampaign.beneficiary).to.equal(beneficiary);
+        expect(destructuredCampaign.owner).to.equal(userCampaignCreator);
+    })
 
-//     it('should not crete campaigns were due date is minor than the current time', async () =>{
-//         try{
-//             await contract.createCampaign("My Campaign",
-//             1000000,
-//             1626472796,
-//             2000000,
-//             beneficiary, {from: userCampaignCreator});
+    it('should not crete campaigns were due date is minor than the current time', async () =>{
+        try{
+            await contract.createCampaign("My Campaign",
+            1000000,
+            1626472796,
+            2000000,
+            beneficiary, {from: userCampaignCreator});
 
-//             expect.fail()
-//         }
-//         catch(err){
-//             expect(err.reason).to.equal( "Your duedate have to be major than the current time");
-//         }
-//     })
-// })
+            expect.fail()
+        }
+        catch(err){
+            expect(err.reason).to.equal( "Your duedate have to be major than the current time");
+        }
+    })
+})

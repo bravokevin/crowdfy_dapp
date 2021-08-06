@@ -38,8 +38,6 @@ contract CrowdfyFabric{
         campaignImplementation = address(new Crowdfy());
     }
 
-
-
     struct Campaign  {
         string  campaignName;
         uint256 fundingGoal;//the minimum amount that the campaigns required
@@ -50,9 +48,6 @@ contract CrowdfyFabric{
         uint256 created; // the time when the campaign was created 
         address campaignAddress;
     }
-
-
-
 
     ///@notice deploy a new instance of the campaign
     function createCampaign(
