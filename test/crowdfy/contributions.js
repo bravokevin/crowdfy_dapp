@@ -1,4 +1,4 @@
-export default async function suite() {
+module.exports = async function suite() {
 
     it("should contribute founds", async () => {
 
