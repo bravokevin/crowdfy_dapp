@@ -10,6 +10,7 @@ in a mapping pointing with an id
     @param _fundingCap the maximum amount to collect, when reached the campaign 
     closes
     @param _beneficiaryAddress the address ot the beneficiary of the campaign
+    @param _ipfsHash the ipfs hash in where the long details of the campaign are stored
 
 
     @dev this function follows the minimal proxi pattern to creates the instances

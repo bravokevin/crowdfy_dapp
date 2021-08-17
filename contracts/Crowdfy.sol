@@ -1,8 +1,10 @@
 //SPDX-License-Identifier: UNLICENSED;
 pragma solidity ^0.8.0;
 
+import "./CrowdfyI.sol";
+
 ///@title crowdfy crowdfunding contract
-contract Crowdfy{
+contract Crowdfy is CrowdfyI{
     
     //** **************** ENUMS ********************** */
 
@@ -77,7 +79,7 @@ contract Crowdfy{
      Sets minimumCollected to true if the minimum amount is reached.
      emmit ContributionMaden event.*/
 
-    function contribute() external payable inState(State.Ongoing){
+    function contribute() external override payable inState(State.Ongoing){
         require(msg.value > 0, "Put a correct amount"); 
         if(hasContributed[msg.sender]){
             Contribution storage theContribution = contributionsByPeople[msg.sender];
@@ -108,7 +110,7 @@ contract Crowdfy{
             emit MinimumReached("The minimum value has been reached");
 
             if((theCampaign.deadline > block.timestamp 
-                 && theCampaign.amountRised >= theCampaign.fundingCap)
+                 && theCampaign.amountRised >= theCampaign.fundingGoal)
                  || theCampaign.amountRised >= theCampaign.fundingCap)
                 {
                 theCampaign.state = State.Succeded;
@@ -126,7 +128,7 @@ contract Crowdfy{
     }
 
     ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
-    function withdraw() external payable inState(State.Succeded){
+    function withdraw() external override payable inState(State.Succeded){
         require(theCampaign.beneficiary == msg.sender, "Only the beneficiary can call this function");
 
         uint toWithdraw = theCampaign.amountRised;
@@ -146,9 +148,9 @@ contract Crowdfy{
 
     /**@notice claim a refund if the campaign was failed and only if you are a contributor
     @dev this follows the withdraw pattern to prevent reentrancy
-    the function use a for loop for iterate over all the contributions that a contributor made
     */
-    function claimFounds () external payable inState(State.Failed) {
+    function claimFounds () external override payable inState(State.Failed) {
+
         require(hasContributed[msg.sender], 'You didnt contributed');
         require(!hasRefunded[msg.sender], "You already has been refunded");
         uint256 amountToWithdraw = contributionsByPeople[msg.sender].value;
@@ -157,6 +159,7 @@ contract Crowdfy{
         require(success, "Failed to send Ether");
         hasRefunded[msg.sender] = true;
         emit ContributorRefounded(msg.sender, amountToWithdraw);
+
     }
 
 
@@ -174,7 +177,7 @@ contract Crowdfy{
         address _beneficiaryAddress,
         address _campaignCreator,
         string memory _ipfsHash
-    ) external
+    ) external override
     {
         require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
 
