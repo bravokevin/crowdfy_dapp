@@ -34,6 +34,8 @@ contract CrowdfyFabric is CrowdfyFabricI{
     //the address of the base campaign contract implementation
     address immutable campaignImplementation;
 
+    address private protocolOwner;
+
     //** **************** EVENTS ********************** */
 
         event CampaignCreated(
@@ -49,6 +51,7 @@ contract CrowdfyFabric is CrowdfyFabricI{
 //** **************** CONSTRUCTOR ********************** */
 
     constructor(){
+        protocolOwner = msg.sender;
         //deploys the campaign base implementation
         campaignImplementation = address(new Crowdfy());
     }
@@ -74,7 +77,8 @@ contract CrowdfyFabric is CrowdfyFabricI{
             _fundingCap, 
             _beneficiaryAddress, 
             campaignCreator,
-            _ipfsHash
+            _ipfsHash,
+            protocolOwner
         );
 
        campaigns.push(Campaign(

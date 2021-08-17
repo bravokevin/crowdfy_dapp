@@ -22,6 +22,7 @@ contract('Crowdfy', (accounts) => {
     const CREATION_TIME = 1686614159;
     const ONE_ETH = 1000000000000000000;
 
+
     //     //allows us to destruct the campaign struct
     const destructCampaign = (struct) => {
         const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised } = struct;
@@ -565,6 +566,22 @@ contract('Crowdfy', (accounts) => {
             catch (error) {
                 expect(error.reason).to.equal("You already has been refunded")
             }
+        })
+    })
+
+    describe.only('Earnings', async () =>{
+        
+        it("should have earnings", async() =>{
+            let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH
+                });
+
+                let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+        expect(finalBalance - initialBalance).to.equal((1/100) * ONE_ETH)
         })
     })
 

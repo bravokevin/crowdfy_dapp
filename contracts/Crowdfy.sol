@@ -24,6 +24,7 @@ contract Crowdfy is CrowdfyI{
     //fire when the contributor recive the founds if the campaign fails
     event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
     event CampaignFinished(string _message, uint256 _timeOfFinalization);
+    event NewEarning(uint256 _earningMade);
 
     //** **************** STRUCTS ********************** */
 
@@ -51,6 +52,7 @@ contract Crowdfy is CrowdfyI{
     }
 
     //** **************** STATE VARIABLES ********************** */
+    address protocolOwner; //sets the owner of the protocol to make earnings
 
     //all the contribution made
     Contribution[] public contributions;
@@ -81,9 +83,12 @@ contract Crowdfy is CrowdfyI{
 
     function contribute() external override payable inState(State.Ongoing){
         require(msg.value > 0, "Put a correct amount"); 
+
+      uint256 earning = getPercentage(msg.value);
+
         if(hasContributed[msg.sender]){
             Contribution storage theContribution = contributionsByPeople[msg.sender];
-            theContribution.value += msg.value;
+            theContribution.value += msg.value - earning;
             theContribution.numberOfContributions++;
             contributions.push(theContribution);
         }
@@ -92,7 +97,7 @@ contract Crowdfy is CrowdfyI{
         contributionsByPeople[msg.sender] = newContribution = Contribution(
             {
                 sender: msg.sender, 
-                value: msg.value, 
+                value: msg.value - earning, 
                 time: block.timestamp,
                 numberOfContributions: 1
             });
@@ -101,7 +106,12 @@ contract Crowdfy is CrowdfyI{
         hasContributed[msg.sender] = true;
         }
 
-        theCampaign.amountRised += msg.value;
+        theCampaign.amountRised += msg.value - earning;
+
+        (bool success, ) = payable(protocolOwner).call{value:earning}("");
+        require(success, "Failed to send Ether");
+
+        emit NewEarning(earning);
         emit ContributionMade(contributionsByPeople[msg.sender]);
 
         if(theCampaign.amountRised >= theCampaign.fundingGoal){
@@ -176,10 +186,12 @@ contract Crowdfy is CrowdfyI{
         uint _fundingCap,
         address _beneficiaryAddress,
         address _campaignCreator,
-        string memory _ipfsHash
+        string memory _ipfsHash,
+        address _protocolOwner
     ) external override
     {
         require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
+
 
         theCampaign = Campaign(
             {
@@ -195,6 +207,8 @@ contract Crowdfy is CrowdfyI{
             amountRised: 0,
             ipfsHash: _ipfsHash
             });
+
+        protocolOwner = _protocolOwner;
     }
 
         function etherToWei(uint _sumInEth) private pure returns (uint){
@@ -226,6 +240,12 @@ contract Crowdfy is CrowdfyI{
         {
             return uint8(State.Failed);
         }
+    }
+
+    /**@notice use to get a revenue of 0.5 for each contribution made */
+    function getPercentage(uint256 num) private pure returns (uint256){
+        return uint256(int256(1) / int256(100) * int256(num));
+        
     }
 
 }

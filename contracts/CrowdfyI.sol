@@ -51,7 +51,7 @@ interface CrowdfyI {
         closes
         @param _beneficiaryAddress the address ot the beneficiary of the campaign
         @param _ipfsHash the ipfs hash in where the long details of the campaign are stored
-
+        @param _protocolOwner the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.
     @dev this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns
 
         REQUIREMENTS: 
@@ -65,7 +65,8 @@ interface CrowdfyI {
         uint _fundingCap,
         address _beneficiaryAddress,
         address _campaignCreator,
-        string memory _ipfsHash
+        string memory _ipfsHash,
+        address _protocolOwner
     ) external;
     
 }
