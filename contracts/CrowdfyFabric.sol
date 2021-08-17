@@ -2,11 +2,26 @@
 pragma solidity 0.8.0;
 
 import "./Crowdfy.sol";
+import "./CrowdfyFabricI.sol";
+
 // import "./CrowdfyFabricI.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 /**@title Factory contract. Follows minimal proxy pattern to deploy each campaigns*/
-contract CrowdfyFabric{
+contract CrowdfyFabric is CrowdfyFabricI{
+
+
+//** **************** STRUCTS ********************** */
+        struct Campaign  {
+        string  campaignName;
+        uint256 fundingGoal;//the minimum amount that the campaigns required
+        uint256 fundingCap; //the maximum amount that the campaigns required
+        uint256 deadline;
+        address beneficiary;//the beneficiary of the campaign
+        address owner;//the creator of the campaign
+        uint256 created; // the time when the campaign was created 
+        address campaignAddress;
+    }
 
     //** **************** STATE VARIABLES ********************** */
 
@@ -38,26 +53,15 @@ contract CrowdfyFabric{
         campaignImplementation = address(new Crowdfy());
     }
 
-    struct Campaign  {
-        string  campaignName;
-        uint256 fundingGoal;//the minimum amount that the campaigns required
-        uint256 fundingCap; //the maximum amount that the campaigns required
-        uint256 deadline;
-        address beneficiary;//the beneficiary of the campaign
-        address owner;//the creator of the campaign
-        uint256 created; // the time when the campaign was created 
-        address campaignAddress;
-    }
-
     ///@notice deploy a new instance of the campaign
     function createCampaign(
-        string memory _campaignName, 
+        string calldata _campaignName, 
         uint _fundingGoal, 
         uint _deadline, 
         uint _fundingCap, 
         address _beneficiaryAddress,
         string calldata _ipfsHash
-    ) external returns(uint256) {
+    ) external override returns(uint256) {
 
         address campaignCreator = msg.sender;
         
@@ -91,12 +95,20 @@ contract CrowdfyFabric{
 
         campaignsById[campaignId] = cloneContract;
 
-        emit CampaignCreated(_campaignName, campaignCreator, _beneficiaryAddress, _fundingCap, block.timestamp, _deadline, cloneContract);
+        emit CampaignCreated(
+                _campaignName, 
+                campaignCreator, 
+                _beneficiaryAddress, 
+                _fundingCap, 
+                block.timestamp, 
+                _deadline, 
+                cloneContract
+            );
 
         return campaignId;
     }
 
-    ///@notice gets the number of campaigns created
+    ///@notice gets the total number number of campaigns created
     function getCampaignsLength() external view returns(uint256){
         return campaigns.length;
     }

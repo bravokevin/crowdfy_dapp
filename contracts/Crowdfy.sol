@@ -1,10 +1,8 @@
 //SPDX-License-Identifier: UNLICENSED;
 pragma solidity ^0.8.0;
 
-import "./CrowdfyI.sol";
-
 ///@title crowdfy crowdfunding contract
-contract Crowdfy is CrowdfyI {
+contract Crowdfy{
     
     //** **************** ENUMS ********************** */
 
@@ -24,7 +22,6 @@ contract Crowdfy is CrowdfyI {
     //fire when the contributor recive the founds if the campaign fails
     event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
     event CampaignFinished(string _message, uint256 _timeOfFinalization);
-    event CampaignStateChange(State _currentState);
 
     //** **************** STRUCTS ********************** */
 
@@ -120,33 +117,9 @@ contract Crowdfy is CrowdfyI {
     }
     
 
-    /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
-    
-    @dev 
+    /**@notice this function ITS ONLY for test porpuses
+        this function has been removed during the deployment process
     */
-    function state() private view returns(uint8 _state) {
-
-        if(theCampaign.deadline > block.timestamp 
-        && theCampaign.amountRised < theCampaign.fundingCap)
-        {
-            return uint8(State.Ongoing);
-        }   
-
-        else if(theCampaign.amountRised >= theCampaign.fundingCap || 
-        theCampaign.amountRised >= theCampaign.fundingGoal)
-        {
-            return uint8(State.Succeded);
-        }
-
-        else if(theCampaign.deadline < block.timestamp
-        && theCampaign.minimumCollected == false 
-        && theCampaign.amountRised < theCampaign.fundingGoal)
-        {
-            return uint8(State.Failed);
-        }
-    }
-
-    ///@notice this function ITS ONLY for test porpuses
     function setDate() external {
         theCampaign.deadline = 3;
         state();
@@ -224,5 +197,33 @@ contract Crowdfy is CrowdfyI {
         function etherToWei(uint _sumInEth) private pure returns (uint){
         return _sumInEth * 1 ether;
     }
+
+    
+    /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
+    
+    @dev 
+    */
+    function state() private view returns(uint8 _state) {
+
+        if(theCampaign.deadline > block.timestamp 
+        && theCampaign.amountRised < theCampaign.fundingCap)
+        {
+            return uint8(State.Ongoing);
+        }   
+
+        else if(theCampaign.amountRised >= theCampaign.fundingCap || 
+        theCampaign.amountRised >= theCampaign.fundingGoal)
+        {
+            return uint8(State.Succeded);
+        }
+
+        else if(theCampaign.deadline < block.timestamp
+        && theCampaign.minimumCollected == false 
+        && theCampaign.amountRised < theCampaign.fundingGoal)
+        {
+            return uint8(State.Failed);
+        }
+    }
+
 }
 

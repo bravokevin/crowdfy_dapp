@@ -1,17 +1,27 @@
 //SPDX-License-Identifier: UNLICENSED;
 pragma solidity 0.8.0;
 
+interface CrowdfyFabricI {
 
-import "./CrowdfyI.sol";
+/**@notice this function creates an instance of the crowdfy contract and then stores that instance in an array. Also stores the address of the camppaign created
+in a mapping pointing with an id
+    @param _campaignName the name of the campaign
+    @param _fundingGoal the miinimum amount to make the campaign success
+    @param _fundingCap the maximum amount to collect, when reached the campaign 
+    closes
+    @param _beneficiaryAddress the address ot the beneficiary of the campaign
 
-interface CrowdfyFabricI is CrowdfyI {
 
+    @dev this function follows the minimal proxi pattern to creates the instances
+    of the crowdfy contract
+*/
     function createCampaign(
-        string memory _campaignName, 
+        string calldata _campaignName, 
         uint _fundingGoal, 
         uint _deadline, 
         uint _fundingCap, 
-        address _beneficiaryAddress
-    ) external returns(bool);
+        address _beneficiaryAddress,
+        string calldata _ipfsHash
+    ) external returns(uint256);
 
 }
