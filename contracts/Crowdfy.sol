@@ -244,7 +244,7 @@ contract Crowdfy is CrowdfyI{
 
     /**@notice use to get a revenue of 0.5 for each contribution made */
     function getPercentage(uint256 num) private pure returns (uint256){
-        return uint256(int256(1) / int256(100) * int256(num));
+        return num * 1 / 100;
         
     }
 

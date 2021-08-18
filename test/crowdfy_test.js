@@ -177,7 +177,7 @@ contract('Crowdfy', (accounts) => {
                 expect(error.reason).to.equal("Not Permited during this state of the campaign");
             }
         })
-        it('should have multiple contrubitions', async () =>{
+        it('should have multiple contrubitions', async () => {
             await contract.contribute(
                 {
                     from: contributor1,
@@ -186,20 +186,20 @@ contract('Crowdfy', (accounts) => {
 
             await contract.contribute(
                 {
-                from: contributor1,
-                value: ONE_ETH / 4
+                    from: contributor1,
+                    value: ONE_ETH / 4
                 });
 
             await contract.contribute(
                 {
-                from: contributor1,
-                value: ONE_ETH / 4
+                    from: contributor1,
+                    value: ONE_ETH / 4
                 });
-                
+
             await contract.contribute(
                 {
-                from: contributor2,
-                value: ONE_ETH / 4
+                    from: contributor2,
+                    value: ONE_ETH / 4
                 });
 
 
@@ -272,7 +272,7 @@ contract('Crowdfy', (accounts) => {
                 expect(error.reason).to.equal("Not Permited during this state of the campaign");
             }
             try {
-                await contract.withdraw({from: beneficiary})
+                await contract.withdraw({ from: beneficiary })
                 expect.fail()
             }
             catch (error) {
@@ -346,7 +346,7 @@ contract('Crowdfy', (accounts) => {
     describe('Withdraw', async () => {
         it('should allow the beneficiary withdraw during succes state', async () => {
 
-            
+
             await contract.contribute(
                 {
                     from: contributor1,
@@ -361,7 +361,7 @@ contract('Crowdfy', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal(ONE_ETH)
             expect(campaignDestructured.state).to.equal(STATE.succed)
 
-            let txInfo = await contract.withdraw({from: beneficiary})
+            let txInfo = await contract.withdraw({ from: beneficiary })
 
             const tx = await web3.eth.getTransaction(txInfo.tx);
 
@@ -370,7 +370,7 @@ contract('Crowdfy', (accounts) => {
             //NOTICE = idk where those 6100 come from
             expect(
                 (balanceFinal - balanceinicial) + (tx.gasPrice * txInfo.receipt.gasUsed)
-                ).to.equal(ONE_ETH + 6100)
+            ).to.equal(ONE_ETH + 6100)
         })
 
         it('should not allowed the beneficiary withdraw during other states of the campaign', async () => {
@@ -464,48 +464,48 @@ contract('Crowdfy', (accounts) => {
     describe('Refunding', async () => {
         it('should allow contributors to refound in case of failure', async () => {
 
-        await contract.contribute(
-            {
-                from: contributor1,
-                value: ONE_ETH / 4
-            });
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 4
+                });
 
-        await contract.contribute(
-            {
-                from: contributor1,
-                value: ONE_ETH / 4
-           });
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 4
+                });
 
-           await contract.contribute(
-            {
-                from: contributor2,
-                value: ONE_ETH / 4
-           });
+            await contract.contribute(
+                {
+                    from: contributor2,
+                    value: ONE_ETH / 4
+                });
 
-        await contract.setDate({ from: userCampaignCreator });
-        const balance1Inicial = await web3.eth.getBalance(contributor1)
-        const balance2Inicial = await web3.eth.getBalance(contributor2)
+            await contract.setDate({ from: userCampaignCreator });
+            const balance1Inicial = await web3.eth.getBalance(contributor1)
+            const balance2Inicial = await web3.eth.getBalance(contributor2)
 
-        let gasUsed = await contract.claimFounds.estimateGas({ from: contributor1 })
-        await contract.claimFounds({ from: contributor1 })
+            let gasUsed = await contract.claimFounds.estimateGas({ from: contributor1 })
+            await contract.claimFounds({ from: contributor1 })
 
-        // let txInfo2 = await contract.claimFounds({ from: contributor2 })
+            // let txInfo2 = await contract.claimFounds({ from: contributor2 })
 
-        // const tx1 = await web3.eth.getTransaction(txInfo1.tx);
-        // const tx2 = await web3.eth.getTransaction(txInfo2.tx);
+            // const tx1 = await web3.eth.getTransaction(txInfo1.tx);
+            // const tx2 = await web3.eth.getTransaction(txInfo2.tx);
 
-        const balance1Final = await web3.eth.getBalance(contributor1)
-        const balance2Final = await web3.eth.getBalance(contributor2)
+            const balance1Final = await web3.eth.getBalance(contributor1)
+            const balance2Final = await web3.eth.getBalance(contributor2)
 
-        let gasPrice = await web3.eth.getGasPrice()
+            let gasPrice = await web3.eth.getGasPrice()
 
-        // //NOTICE = idk where those 6144 and 16384 come from
-        // expect(
-        //     (balance1Final - balance1Inicial) + (gasPrice * gasUsed)).to.equal(500000000000000000)
-        
-        // // expect(
-        // //     (balance2Final - balance2Inicial) + (gasPrice * gasUsed)
-        // //     ).to.equal(250000000000000000 + 16384 - 6144)
+            // //NOTICE = idk where those 6144 and 16384 come from
+            // expect(
+            //     (balance1Final - balance1Inicial) + (gasPrice * gasUsed)).to.equal(500000000000000000)
+
+            // // expect(
+            // //     (balance2Final - balance2Inicial) + (gasPrice * gasUsed)
+            // //     ).to.equal(250000000000000000 + 16384 - 6144)
         })
 
         it('should not allowed others to refund', async () => {
@@ -517,11 +517,11 @@ contract('Crowdfy', (accounts) => {
                 });
 
 
-                await contract.contribute(
-                    {
-                        from: contributor2,
-                        value: ONE_ETH / 3
-                    });
+            await contract.contribute(
+                {
+                    from: contributor2,
+                    value: ONE_ETH / 3
+                });
 
             await contract.setDate({ from: userCampaignCreator });
 
@@ -555,12 +555,12 @@ contract('Crowdfy', (accounts) => {
                     from: contributor1,
                     value: ONE_ETH / 3
                 });
-                
+
             await contract.setDate({ from: userCampaignCreator });
 
             await contract.claimFounds({ from: contributor1 })
             try {
-            await contract.claimFounds({ from: contributor1 })
+                await contract.claimFounds({ from: contributor1 })
                 expect.fail()
             }
             catch (error) {
@@ -569,9 +569,9 @@ contract('Crowdfy', (accounts) => {
         })
     })
 
-    describe.only('Earnings', async () =>{
-        
-        it("should have earnings", async() =>{
+    describe.only('Earnings', async () => {
+
+        it("should have earnings for one contribution", async () => {
             let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
             await contract.contribute(
                 {
@@ -579,9 +579,88 @@ contract('Crowdfy', (accounts) => {
                     value: ONE_ETH
                 });
 
-                let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+            let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
 
-        expect(finalBalance - initialBalance).to.equal((1/100) * ONE_ETH)
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH)
+        })
+
+        it("should have earnings for multiple contributions", async () => {
+
+            let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 4
+                });
+
+            let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH / 4)
+
+
+            initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 4
+                });
+
+            finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH / 4)
+
+            initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+            await contract.contribute(
+                {
+                    from: accounts[8],
+                    value: ONE_ETH / 4
+                });
+
+
+            finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH / 4)
+
+
+            initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            await contract.contribute(
+                {
+                    from: contributor2,
+                    value: ONE_ETH / 4
+                });
+
+            finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH / 4)
+
+        })
+        it("should support high amounts of earnings", async () => {
+
+            let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+            await contract.contribute(
+                {
+                    from: accounts[8],
+                    value: ONE_ETH * ONE_ETH
+                });
+            let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH **2)
+        })
+
+        it("should support low amounts of earnings", async () => {
+
+            let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
+            await contract.contribute(
+                {
+                    from: accounts[8],
+                    value: ONE_ETH /10
+                });
+            let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
+
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH/10)
         })
     })
 
