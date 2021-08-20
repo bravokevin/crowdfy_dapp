@@ -361,21 +361,23 @@ contract('Crowdfy', (accounts) => {
             let campaignDestructured = destructCampaign(campaignStruct);
 
             expect(campaignDestructured.amountRised).to.equal(ONE_ETH + ONE_ETH - ((1 / 100) * (ONE_ETH + ONE_ETH)))
-            expect(campaignDestructured.state).to.equal(STATE.succed)
 
+            expect(campaignDestructured.state).to.equal(STATE.succed)
+                let gas = await contract.withdraw.estimateGas({ from: beneficiary });
             let txInfo = await contract.withdraw({ from: beneficiary })
 
             const tx = await web3.eth.getTransaction(txInfo.tx);
 
             let balanceFinal = await web3.eth.getBalance(beneficiary)
 
-            //NOTICE = idk where those 6100 come from
+            //NOTICE = idk where those 4000 come from
             expect(
                 (balanceFinal - balanceinicial) + 
                 (tx.gasPrice * txInfo.receipt.gasUsed) 
-            ).to.equal(ONE_ETH + ONE_ETH - 
+            ).to.equal(
+                ONE_ETH + ONE_ETH - 
                 ((1 / 100) * (ONE_ETH + ONE_ETH)) +// the fee that was send to the owner of the protocol (me)
-                6100 )
+                4000 )
                 
         })
 

@@ -20,7 +20,7 @@ contract Crowdfy is CrowdfyI{
 
     event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
     event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
-    event BeneficiaryWitdraws(string _message, address _beneficiaryAddress); //fire when the beneficiary withdraws found
+    event BeneficiaryWitdraws(string _message, address _beneficiaryAddress, uint256 _amount); //fire when the beneficiary withdraws found
     //fire when the contributor recive the founds if the campaign fails
     event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
     event CampaignFinished(string _message, uint256 _timeOfFinalization);
@@ -148,7 +148,7 @@ contract Crowdfy is CrowdfyI{
         (bool success, ) = payable(theCampaign.beneficiary).call{value:toWithdraw}("");
         require(success, "Failed to send Ether");
 
-        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", theCampaign.beneficiary);
+        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", theCampaign.beneficiary, toWithdraw);
         
         theCampaign.state = State.Finalized;
 
@@ -210,11 +210,6 @@ contract Crowdfy is CrowdfyI{
 
         protocolOwner = _protocolOwner;
     }
-
-        function etherToWei(uint _sumInEth) private pure returns (uint){
-        return _sumInEth * 1 ether;
-    }
-
     
     /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
     
@@ -242,11 +237,16 @@ contract Crowdfy is CrowdfyI{
         }
     }
 
-    /**@notice use to get a revenue of 0.5 for each contribution made */
+    /**@notice use to get a revenue of 1% for each contribution made */
     function getPercentage(uint256 num) private pure returns (uint256){
         return num * 1 / 100;
         
     }
+
+    function etherToWei(uint _sumInEth) private pure returns (uint){
+        return _sumInEth * 1 ether;
+    }
+
 
 }
 
