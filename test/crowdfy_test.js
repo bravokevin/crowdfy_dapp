@@ -75,6 +75,8 @@ contract('Crowdfy', (accounts) => {
         contract = await CrowdfyContract.at(await contractFactory.campaignsById(0));
 
     })
+  //  ((1 / 100) * (ONE_ETH + ONE_ETH)) NOTICE: this comes from the fee that takes for every contribution 1% that goes to the protocol owner(me)
+
 
     it("contract should be initialized correctly", async () => {
 
@@ -107,16 +109,18 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH - 200000000
+                    value: ONE_ETH / 2
                 });
 
             campaignStruct = await contract.theCampaign.call()
             destructuredCampaign = destructCampaign(campaignStruct)
-            expect(destructuredCampaign.amountRised).to.equal(ONE_ETH - 200000000)
+
+            expect(destructuredCampaign.amountRised).to.equal((ONE_ETH / 2) - ((1 / 100) * ONE_ETH / 2))
+
             const contributions = await contract.contributions.call(0);
             let contributionDestructured = destructContribution(contributions);
             expect(contributionDestructured.sender).to.equal(contributor1);
-            expect(contributionDestructured.value).to.equal(ONE_ETH - 200000000);
+            expect(contributionDestructured.value).to.equal((ONE_ETH / 2) - ((1 / 100) * ONE_ETH / 2));
             expect(contributionDestructured.numberOfContributions).to.equal(1);
 
 
@@ -141,7 +145,7 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH
+                    value: ONE_ETH + ONE_ETH
                 });
 
             let campaignStruct = await contract.theCampaign.call()
@@ -207,7 +211,7 @@ contract('Crowdfy', (accounts) => {
             let contributionDestructured = destructContribution(contributions);
 
             expect(contributionDestructured.sender).to.equal(contributor1);
-            expect(contributionDestructured.value).to.equal(750000000000000000);
+            expect(contributionDestructured.value).to.equal(750000000000000000 - (1 / 100) * 750000000000000000);
             expect(contributionDestructured.numberOfContributions).to.equal(3);
 
             //NOTICE we have to know the length of the array
@@ -224,7 +228,7 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH
+                    value: ONE_ETH + ONE_ETH
                 });
 
 
@@ -232,8 +236,8 @@ contract('Crowdfy', (accounts) => {
 
             let campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(ONE_ETH)
             expect(campaignDestructured.minimumCollected).to.equal(true)
+            expect(campaignDestructured.amountRised).to.equal(ONE_ETH + ONE_ETH - ((1 / 100) * (ONE_ETH + ONE_ETH)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
         })
 
@@ -259,7 +263,7 @@ contract('Crowdfy', (accounts) => {
                     value: amount
                 });
 
-            contract.setDate({ from: userCampaignCreator });
+            await contract.setDate({ from: userCampaignCreator });
             try {
                 await contract.contribute(
                     {
@@ -282,7 +286,7 @@ contract('Crowdfy', (accounts) => {
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(750000000000000000)
+            expect(campaignDestructured.amountRised).to.equal(750000000000000000 - ((1 / 100) * 750000000000000000))
             // expect(campaignDestructured.state).to.equal(STATE.failed)
         })
 
@@ -302,30 +306,17 @@ contract('Crowdfy', (accounts) => {
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(amount)
+            expect(campaignDestructured.amountRised).to.equal(amount - ((1 / 100) * amount))
             expect(campaignDestructured.state).to.equal(STATE.ongoing)
             await contract.contribute(
                 {
                     from: contributor1,
                     value: amount
                 });
-
-
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(amount + amount)
-            expect(campaignDestructured.state).to.equal(STATE.ongoing)
-            await contract.contribute(
-                {
-                    from: contributor1,
-                    value: amount
-                });
-
-            campaignStruct = await contract.theCampaign.call()
-            campaignDestructured = destructCampaign(campaignStruct);
-
-            expect(campaignDestructured.amountRised).to.equal(amount + amount + amount)
+            expect(campaignDestructured.amountRised).to.equal(amount + amount - ((1 / 100) * 500000000000000000))
             expect(campaignDestructured.state).to.equal(STATE.ongoing)
             await contract.contribute(
                 {
@@ -336,7 +327,18 @@ contract('Crowdfy', (accounts) => {
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(ONE_ETH)
+            expect(campaignDestructured.amountRised).to.equal(amount + amount + amount- ((1 / 100) * 750000000000000000 ))
+            expect(campaignDestructured.state).to.equal(STATE.ongoing)
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: amount + amount
+                });
+
+            campaignStruct = await contract.theCampaign.call()
+            campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.amountRised).to.equal((ONE_ETH + amount) - ((1 / 100) * (ONE_ETH + amount)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
 
 
@@ -350,7 +352,7 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH
+                    value: ONE_ETH +ONE_ETH
                 });
 
             let balanceinicial = await web3.eth.getBalance(beneficiary)
@@ -358,7 +360,7 @@ contract('Crowdfy', (accounts) => {
             let campaignStruct = await contract.theCampaign.call()
             let campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(ONE_ETH)
+            expect(campaignDestructured.amountRised).to.equal(ONE_ETH + ONE_ETH - ((1 / 100) * (ONE_ETH + ONE_ETH)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
 
             let txInfo = await contract.withdraw({ from: beneficiary })
@@ -369,8 +371,12 @@ contract('Crowdfy', (accounts) => {
 
             //NOTICE = idk where those 6100 come from
             expect(
-                (balanceFinal - balanceinicial) + (tx.gasPrice * txInfo.receipt.gasUsed)
-            ).to.equal(ONE_ETH + 6100)
+                (balanceFinal - balanceinicial) + 
+                (tx.gasPrice * txInfo.receipt.gasUsed) 
+            ).to.equal(ONE_ETH + ONE_ETH - 
+                ((1 / 100) * (ONE_ETH + ONE_ETH)) +// the fee that was send to the owner of the protocol (me)
+                6100 )
+                
         })
 
         it('should not allowed the beneficiary withdraw during other states of the campaign', async () => {
@@ -412,16 +418,17 @@ contract('Crowdfy', (accounts) => {
         })
 
         it('should not allowed others to withdraw', async () => {
+
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH / 2
+                    value: ONE_ETH / 2 
                 });
 
             await contract.contribute(
                 {
                     from: contributor2,
-                    value: ONE_ETH / 2
+                    value: ONE_ETH 
                 });
 
             try {
@@ -569,7 +576,7 @@ contract('Crowdfy', (accounts) => {
         })
     })
 
-    describe.only('Earnings', async () => {
+    describe('Earnings', async () => {
 
         it("should have earnings for one contribution", async () => {
             let initialBalance = await web3.eth.getBalance(contractImplementationCreator)
@@ -643,11 +650,11 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: accounts[8],
-                    value: ONE_ETH * ONE_ETH
+                    value: 10000000000000000000
                 });
             let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
 
-            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH **2)
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * 10000000000000000000)
         })
 
         it("should support low amounts of earnings", async () => {
@@ -660,7 +667,7 @@ contract('Crowdfy', (accounts) => {
                 });
             let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
 
-            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH/10)
+            expect(finalBalance - initialBalance).to.equal((1 / 100) * ONE_ETH / 10)
         })
     })
 

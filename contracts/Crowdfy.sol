@@ -84,11 +84,11 @@ contract Crowdfy is CrowdfyI{
     function contribute() external override payable inState(State.Ongoing){
         require(msg.value > 0, "Put a correct amount"); 
 
-      uint256 earning = getPercentage(msg.value);
+        uint256 earning = getPercentage(msg.value);
 
         if(hasContributed[msg.sender]){
             Contribution storage theContribution = contributionsByPeople[msg.sender];
-            theContribution.value += msg.value - earning;
+            theContribution.value += msg.value - earning; 
             theContribution.numberOfContributions++;
             contributions.push(theContribution);
         }
@@ -107,7 +107,7 @@ contract Crowdfy is CrowdfyI{
         }
 
         theCampaign.amountRised += msg.value - earning;
-
+        //sends to the deployer of the protocol a earning of 1% for each contribution
         (bool success, ) = payable(protocolOwner).call{value:earning}("");
         require(success, "Failed to send Ether");
 
