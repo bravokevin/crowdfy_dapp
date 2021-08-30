@@ -40,12 +40,12 @@ contract CrowdfyFabric is CrowdfyFabricI{
 
         event CampaignCreated(
             string campaignName,
-            address creator, 
+            address indexed creator, 
             address beneficiary, 
             uint fundingGoal, 
             uint createdTime, 
             uint deadline,
-            address campaignAddress
+            address indexed campaignAddress
         );
 
 //** **************** CONSTRUCTOR ********************** */
