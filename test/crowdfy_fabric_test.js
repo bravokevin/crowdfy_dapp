@@ -37,7 +37,6 @@ contract('CrowdfyFabric', accounts => {
         CREATION_TIME,
         2000000,
         beneficiary,
-         "ipfsHash",
          {from: userCampaignCreator});
         
         const  campaignLength = await contract.getCampaignsLength.call();

@@ -68,7 +68,6 @@ contract('Crowdfy', (accounts) => {
             CREATION_TIME,
             1,
             beneficiary,
-            "IPFSHash",
             { from: userCampaignCreator }
         );
 

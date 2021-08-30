@@ -40,7 +40,6 @@ contract Crowdfy is CrowdfyI{
         bool minimumCollected; //to see if we minimumCollected the enough amount of foounds
         State state; //the current state of the campaign
         uint256 amountRised;  
-        string ipfsHash;
     }
 
     //Contribution datastructure
@@ -180,13 +179,12 @@ contract Crowdfy is CrowdfyI{
      */
     function initializeCampaign
     (
-        string memory _campaignName,
+        string calldata _campaignName,
         uint _fundingGoal,
         uint _deadline,
         uint _fundingCap,
         address _beneficiaryAddress,
         address _campaignCreator,
-        string memory _ipfsHash,
         address _protocolOwner
     ) external override
     {
@@ -204,8 +202,7 @@ contract Crowdfy is CrowdfyI{
             created: block.timestamp,
             minimumCollected: false,
             state: State.Ongoing,
-            amountRised: 0,
-            ipfsHash: _ipfsHash
+            amountRised: 0
             });
 
         protocolOwner = _protocolOwner;

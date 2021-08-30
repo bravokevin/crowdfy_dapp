@@ -62,8 +62,7 @@ contract CrowdfyFabric is CrowdfyFabricI{
         uint _fundingGoal, 
         uint _deadline, 
         uint _fundingCap, 
-        address _beneficiaryAddress,
-        string calldata _ipfsHash
+        address _beneficiaryAddress
     ) external override returns(uint256) {
 
         address campaignCreator = msg.sender;
@@ -77,7 +76,6 @@ contract CrowdfyFabric is CrowdfyFabricI{
             _fundingCap, 
             _beneficiaryAddress, 
             campaignCreator,
-            _ipfsHash,
             protocolOwner
         );
 

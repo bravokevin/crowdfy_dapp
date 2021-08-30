@@ -50,7 +50,6 @@ interface CrowdfyI {
         @param _fundingCap the maximum amount to collect, when reached the campaign 
         closes
         @param _beneficiaryAddress the address ot the beneficiary of the campaign
-        @param _ipfsHash the ipfs hash in where the long details of the campaign are stored
         @param _protocolOwner the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.
     @dev this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns
 
@@ -59,13 +58,12 @@ interface CrowdfyI {
      */
       function initializeCampaign
     (
-        string memory _campaignName,
+        string calldata _campaignName,
         uint _fundingGoal,
         uint _deadline,
         uint _fundingCap,
         address _beneficiaryAddress,
         address _campaignCreator,
-        string memory _ipfsHash,
         address _protocolOwner
     ) external;
     
