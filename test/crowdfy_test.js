@@ -17,15 +17,16 @@ contract('Crowdfy', (accounts) => {
         failed: 1,
         succed: 2,
         paidOut: 3,
+        earlySuccess: 4
     };
 
     const CREATION_TIME = 1686614159;
     const ONE_ETH = 1000000000000000000;
-
+    const ERR_MSG = "Not Permited during this state of the campaign."
 
     //     //allows us to destruct the campaign struct
     const destructCampaign = (struct) => {
-        const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, minimumCollected, state, amountRised } = struct;
+        const { campaignName, fundingGoal, fundingCap, deadline, beneficiary, owner, created, state, amountRised } = struct;
 
         return {
             campaignName,
@@ -35,7 +36,6 @@ contract('Crowdfy', (accounts) => {
             beneficiary,
             owner,
             created: Number(created),
-            minimumCollected,
             state: Number(state),
             amountRised: Number(amountRised)
         }
@@ -74,7 +74,7 @@ contract('Crowdfy', (accounts) => {
         contract = await CrowdfyContract.at(await contractFactory.campaignsById(0));
 
     })
-  //  ((1 / 100) * (ONE_ETH + ONE_ETH)) NOTICE: this comes from the fee that takes for every contribution 1% that goes to the protocol owner(me)
+    //  ((1 / 100) * (ONE_ETH + ONE_ETH)) NOTICE: this comes from the fee that takes for every contribution 1% that goes to the protocol owner(me)
 
 
     it("contract should be initialized correctly", async () => {
@@ -89,7 +89,7 @@ contract('Crowdfy', (accounts) => {
         expect(destructuredCampaign.deadline).to.equal(CREATION_TIME)
         expect(destructuredCampaign.beneficiary).to.equal(beneficiary);
         expect(destructuredCampaign.owner).to.equal(userCampaignCreator);
-        expect(destructuredCampaign.minimumCollected).to.equal(false);
+
         expect(destructuredCampaign.state.valueOf()).to.equal(STATE.ongoing);
         expect(destructuredCampaign.amountRised).to.equal(0);
 
@@ -150,7 +150,7 @@ contract('Crowdfy', (accounts) => {
             let campaignStruct = await contract.theCampaign.call()
 
             let campaignDestructured = destructCampaign(campaignStruct);
-            expect(campaignDestructured.state).to.equal(STATE.succed)
+
 
             try {
                 await contract.contribute(
@@ -161,7 +161,7 @@ contract('Crowdfy', (accounts) => {
 
                 expect.fail()
             } catch (err) {
-
+                expect(campaignDestructured.state).to.equal(STATE.succed)
             }
         })
 
@@ -177,7 +177,7 @@ contract('Crowdfy', (accounts) => {
                 expect.fail()
             }
             catch (error) {
-                expect(error.reason).to.equal("Not Permited during this state of the campaign");
+                expect(error.reason).to.equal(ERR_MSG);
             }
         })
         it('should have multiple contrubitions', async () => {
@@ -213,10 +213,7 @@ contract('Crowdfy', (accounts) => {
             expect(contributionDestructured.value).to.equal(750000000000000000 - (1 / 100) * 750000000000000000);
             expect(contributionDestructured.numberOfContributions).to.equal(3);
 
-            //NOTICE we have to know the length of the array
-            // expect(await contract.contributions.length).to.equal(4);
-
-
+            // const allContributions = await contract.contributions.call(3)
 
         })
     })
@@ -235,7 +232,6 @@ contract('Crowdfy', (accounts) => {
 
             let campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.minimumCollected).to.equal(true)
             expect(campaignDestructured.amountRised).to.equal(ONE_ETH + ONE_ETH - ((1 / 100) * (ONE_ETH + ONE_ETH)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
         })
@@ -272,21 +268,23 @@ contract('Crowdfy', (accounts) => {
                 expect.fail()
             }
             catch (error) {
-                expect(error.reason).to.equal("Not Permited during this state of the campaign");
+                expect(error.reason).to.equal(ERR_MSG);
             }
             try {
                 await contract.withdraw({ from: beneficiary })
+                campaignStruct = await contract.theCampaign.call()
+                campaignDestructured = destructCampaign(campaignStruct);
+                expect(campaignDestructured.state).to.equal(STATE.failed)
                 expect.fail()
             }
             catch (error) {
-                expect(error.reason).to.equal("Not Permited during this state of the campaign");
+                expect(error.reason).to.equal(ERR_MSG);
             }
 
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
             expect(campaignDestructured.amountRised).to.equal(750000000000000000 - ((1 / 100) * 750000000000000000))
-            // expect(campaignDestructured.state).to.equal(STATE.failed)
         })
 
         it('should keep in ongoing state', async () => {
@@ -326,7 +324,7 @@ contract('Crowdfy', (accounts) => {
             campaignStruct = await contract.theCampaign.call()
             campaignDestructured = destructCampaign(campaignStruct);
 
-            expect(campaignDestructured.amountRised).to.equal(amount + amount + amount- ((1 / 100) * 750000000000000000 ))
+            expect(campaignDestructured.amountRised).to.equal(amount + amount + amount - ((1 / 100) * 750000000000000000))
             expect(campaignDestructured.state).to.equal(STATE.ongoing)
             await contract.contribute(
                 {
@@ -340,7 +338,6 @@ contract('Crowdfy', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal((ONE_ETH + amount) - ((1 / 100) * (ONE_ETH + amount)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
 
-
         })
     })
 
@@ -351,7 +348,7 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH +ONE_ETH
+                    value: ONE_ETH + ONE_ETH
                 });
 
             let balanceinicial = await web3.eth.getBalance(beneficiary)
@@ -362,7 +359,7 @@ contract('Crowdfy', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal(ONE_ETH + ONE_ETH - ((1 / 100) * (ONE_ETH + ONE_ETH)))
 
             expect(campaignDestructured.state).to.equal(STATE.succed)
-                let gas = await contract.withdraw.estimateGas({ from: beneficiary });
+            let gas = await contract.withdraw.estimateGas({ from: beneficiary });
             let txInfo = await contract.withdraw({ from: beneficiary })
 
             const tx = await web3.eth.getTransaction(txInfo.tx);
@@ -371,16 +368,16 @@ contract('Crowdfy', (accounts) => {
 
             //NOTICE = idk where those 4000 come from
             expect(
-                (balanceFinal - balanceinicial) + 
-                (tx.gasPrice * txInfo.receipt.gasUsed) 
+                (balanceFinal - balanceinicial) +
+                (tx.gasPrice * txInfo.receipt.gasUsed)
             ).to.equal(
-                ONE_ETH + ONE_ETH - 
+                ONE_ETH + ONE_ETH -
                 ((1 / 100) * (ONE_ETH + ONE_ETH)) +// the fee that was send to the owner of the protocol (me)
-                4000 )
-                
+                4000)
+
         })
 
-        it('should not allowed the beneficiary withdraw during other states of the campaign', async () => {
+        it('should not allowed the beneficiary withdraw during ongoing state of the campaign', async () => {
 
             await contract.contribute(
                 {
@@ -393,12 +390,12 @@ contract('Crowdfy', (accounts) => {
                 expect.fail()
             }
             catch (error) {
-                expect(error.reason).to.equal("Not Permited during this state of the campaign")
+                expect(error.reason).to.equal(ERR_MSG)
             }
 
         })
 
-        it('should not allowd the beneficiary withdraw during fail state', async () => {
+        it('should not allow the beneficiary withdraw during fail state', async () => {
 
             await contract.contribute(
                 {
@@ -413,23 +410,23 @@ contract('Crowdfy', (accounts) => {
                 expect.fail()
             }
             catch (error) {
-                expect(error.reason).to.equal("Not Permited during this state of the campaign")
+                expect(error.reason).to.equal(ERR_MSG)
             }
 
         })
 
-        it('should not allowed others to withdraw', async () => {
+        it('should not allow others to withdraw', async () => {
 
             await contract.contribute(
                 {
                     from: contributor1,
-                    value: ONE_ETH / 2 
+                    value: ONE_ETH / 2
                 });
 
             await contract.contribute(
                 {
                     from: contributor2,
-                    value: ONE_ETH 
+                    value: ONE_ETH
                 });
 
             try {
@@ -664,7 +661,7 @@ contract('Crowdfy', (accounts) => {
             await contract.contribute(
                 {
                     from: accounts[8],
-                    value: ONE_ETH /10
+                    value: ONE_ETH / 10
                 });
             let finalBalance = await web3.eth.getBalance(contractImplementationCreator)
 
@@ -672,4 +669,6 @@ contract('Crowdfy', (accounts) => {
         })
     })
 
+    
 })
+

@@ -59,9 +59,9 @@ contract CrowdfyFabric is CrowdfyFabricI{
     ///@notice deploy a new instance of the campaign
     function createCampaign(
         string calldata _campaignName, 
-        uint _fundingGoal, 
-        uint _deadline, 
-        uint _fundingCap, 
+        uint256 _fundingGoal, 
+        uint256 _deadline, 
+        uint256 _fundingCap, 
         address _beneficiaryAddress
     ) external override returns(uint256) {
 

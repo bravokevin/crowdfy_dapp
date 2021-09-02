@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "./CrowdfyI.sol";
 
 ///@title crowdfy crowdfunding contract
-contract Crowdfy is CrowdfyI{
-    
+contract Crowdfy is CrowdfyI {
     //** **************** ENUMS ********************** */
 
     //The posible states of the campaign
@@ -13,33 +12,40 @@ contract Crowdfy is CrowdfyI{
         Ongoing,
         Failed,
         Succeded,
-        Finalized
+        Finalized,
+        EarlySuccess
     }
 
     //** **************** EVENTS ********************** */
 
-    event ContributionMade (Contribution _contributionMade); // fire when a contribution is made
-    event MinimumReached (string); //fire when the campaign reached the minimum amoun to succced
-    event BeneficiaryWitdraws(string _message, address _beneficiaryAddress, uint256 _amount); //fire when the beneficiary withdraws found
+    event ContributionMade(Contribution _contributionMade); // fire when a contribution is made
+    event MinimumReached(string); //fire when the campaign reached the minimum amoun to succced
+    event BeneficiaryWitdraws(
+        string _message,
+        address _beneficiaryAddress,
+        uint256 _amount
+    ); //fire when the beneficiary withdraws found
     //fire when the contributor recive the founds if the campaign fails
-    event ContributorRefounded(address _payoutDestination, uint256 _payoutAmount); 
+    event ContributorRefounded(
+        address _payoutDestination,
+        uint256 _payoutAmount
+    );
     event CampaignFinished(string _message, uint256 _timeOfFinalization);
     event NewEarning(uint256 _earningMade);
 
     //** **************** STRUCTS ********************** */
 
     //Campaigns dataStructure
-    struct Campaign  {
-        string  campaignName;
-        uint256 fundingGoal;//the minimum amount that the campaigns required
+    struct Campaign {
+        string campaignName;
+        uint256 fundingGoal; //the minimum amount that the campaigns required
         uint256 fundingCap; //the maximum amount that the campaigns required
         uint256 deadline;
-        address beneficiary;//the beneficiary of the campaign
-        address owner;//the creator of the campaign
+        address beneficiary; //the beneficiary of the campaign
+        address owner; //the creator of the campaign
         uint256 created; // the time when the campaign was created
-        bool minimumCollected; //to see if we minimumCollected the enough amount of foounds
         State state; //the current state of the campaign
-        uint256 amountRised;  
+        uint256 amountRised; //the total amount that the campaign has been collected
     }
 
     //Contribution datastructure
@@ -51,13 +57,15 @@ contract Crowdfy is CrowdfyI{
     }
 
     //** **************** STATE VARIABLES ********************** */
-    address protocolOwner; //sets the owner of the protocol to make earnings
+    address private protocolOwner; //sets the owner of the protocol to make earnings
 
     //all the contribution made
     Contribution[] public contributions;
     // contributions made by people
     mapping(address => Contribution) public contributionsByPeople;
 
+    uint256 public amountToWithdraw; // the amount that the bneficiary is able to withdraw
+    uint256 public withdrawn = 0; // the current amount that the beneficiary has withdrawing
     //the actual campaign
     Campaign public theCampaign;
 
@@ -68,65 +76,72 @@ contract Crowdfy is CrowdfyI{
 
     //** **************** MODIFIERS ********************** */
 
-    modifier inState(State _expectedState){
-        require(state() == uint8(_expectedState), "Not Permited during this state of the campaign");
+    modifier inState(State[2] memory _expectedState) {
+        require(
+            state() == uint8(_expectedState[0]) ||
+                state() == uint8(_expectedState[1]),
+            "Not Permited during this state of the campaign."
+        );
         _;
     }
-    
+
     //** **************** FUNCTIONS CODE ********************** */
 
-
     /**@notice allows users to contribute to the campaign, as the campaign is in the onoging state.
-     Sets minimumCollected to true if the minimum amount is reached.
-     emmit ContributionMaden event.*/
+     */
 
-    function contribute() external override payable inState(State.Ongoing){
-        require(msg.value > 0, "Put a correct amount"); 
+    function contribute()
+        external
+        payable
+        override
+        inState([State.Ongoing, State.EarlySuccess])
+    {
+        require(msg.value > 0, "Put a correct amount");
 
         uint256 earning = getPercentage(msg.value);
 
-        if(hasContributed[msg.sender]){
-            Contribution storage theContribution = contributionsByPeople[msg.sender];
-            theContribution.value += msg.value - earning; 
+        if (hasContributed[msg.sender]) {
+            Contribution storage theContribution = contributionsByPeople[
+                msg.sender
+            ];
+            theContribution.value += msg.value - earning;
             theContribution.numberOfContributions++;
             contributions.push(theContribution);
-        }
-        else{
-        Contribution memory newContribution; 
-        contributionsByPeople[msg.sender] = newContribution = Contribution(
-            {
-                sender: msg.sender, 
-                value: msg.value - earning, 
+        } else {
+            Contribution memory newContribution;
+            contributionsByPeople[msg.sender] = newContribution = Contribution({
+                sender: msg.sender,
+                value: msg.value - earning,
                 time: block.timestamp,
                 numberOfContributions: 1
             });
-            
-        contributions.push(newContribution);
-        hasContributed[msg.sender] = true;
+
+            contributions.push(newContribution);
+            hasContributed[msg.sender] = true;
         }
 
         theCampaign.amountRised += msg.value - earning;
+        amountToWithdraw += msg.value - earning;
         //sends to the deployer of the protocol a earning of 1% for each contribution
-        (bool success, ) = payable(protocolOwner).call{value:earning}("");
+        (bool success, ) = payable(protocolOwner).call{value: earning}("");
         require(success, "Failed to send Ether");
 
         emit NewEarning(earning);
         emit ContributionMade(contributionsByPeople[msg.sender]);
 
-        if(theCampaign.amountRised >= theCampaign.fundingGoal){
-            theCampaign.minimumCollected = true;
-
+        if (theCampaign.amountRised >= theCampaign.fundingGoal) {
+            theCampaign.state = State.EarlySuccess;
             emit MinimumReached("The minimum value has been reached");
 
-            if((theCampaign.deadline > block.timestamp 
-                 && theCampaign.amountRised >= theCampaign.fundingGoal)
-                 || theCampaign.amountRised >= theCampaign.fundingCap)
-                {
+            if (
+                theCampaign.deadline > block.timestamp &&
+                theCampaign.amountRised >= theCampaign.fundingCap
+            ) 
+            {
                 theCampaign.state = State.Succeded;
-                }
+            }
         }
     }
-    
 
     /**@notice this function ITS ONLY for test porpuses
         this function has been removed during the deployment process
@@ -136,114 +151,149 @@ contract Crowdfy is CrowdfyI{
         state();
     }
 
-    ///@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
-    function withdraw() external override payable inState(State.Succeded){
-        require(theCampaign.beneficiary == msg.sender, "Only the beneficiary can call this function");
+    /**@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
 
-        uint toWithdraw = theCampaign.amountRised;
+    *@dev first stores the amount that the beneficiary is able to withdraw:
+            amountToWithdraw(the amount that the campaign has been collected) 
+            - 
+            withdrawn(the amount that the beneficiary has withdrawing. starts at 0)
+        this is store in "toWithdraw"
 
-        theCampaign.amountRised = 0;
+        second, add that amount "toWithdraw" the the quantity that the beneficiary has already withdrawing "withdrawn"
 
-        (bool success, ) = payable(theCampaign.beneficiary).call{value:toWithdraw}("");
+        third, substaract the amount that the beneficiary has withdrawn to the amount that the bneficiary is able to withdraw
+
+
+    */
+    function withdraw()
+        external
+        payable
+        override
+        inState([State.Succeded, State.EarlySuccess])
+    {
+        require(
+            theCampaign.beneficiary == msg.sender,
+            "Only the beneficiary can call this function"
+        );
+        uint256 toWithdraw;
+
+        // prevents errors for underflow
+        if(amountToWithdraw < withdrawn){
+            toWithdraw = withdrawn - amountToWithdraw;
+        }
+        else{
+            toWithdraw = amountToWithdraw - withdrawn;
+        }
+        // WARNING: posible error for overflow(but that would be is a lot of ether)
+        withdrawn += amountToWithdraw;
+
+        amountToWithdraw = 0;//prevents reentrancy
+
+        (bool success, ) = payable(theCampaign.beneficiary).call{
+            value: toWithdraw
+        }("");
         require(success, "Failed to send Ether");
 
-        emit BeneficiaryWitdraws("The beneficiary has withdraw the founds", theCampaign.beneficiary, toWithdraw);
-        
-        theCampaign.state = State.Finalized;
+        emit BeneficiaryWitdraws(
+            "The beneficiary has withdraw the founds",
+            theCampaign.beneficiary,
+            toWithdraw
+        );
 
-        emit CampaignFinished("The campaign was finished succesfull", block.timestamp);
+        //if the beneficiary has withdrawn an amount equal to the funding cap, finish the campaign
+        if (withdrawn >= theCampaign.fundingCap) {
+            theCampaign.state = State.Finalized;
+            emit CampaignFinished(
+                "The campaign was finished succesfully",
+                block.timestamp
+            );
+        }
     }
-
 
     /**@notice claim a refund if the campaign was failed and only if you are a contributor
     @dev this follows the withdraw pattern to prevent reentrancy
     */
-    function claimFounds () external override payable inState(State.Failed) {
-
-        require(hasContributed[msg.sender], 'You didnt contributed');
+    function claimFounds()
+        external
+        payable
+        override
+        inState([State.Failed, State.Failed])
+    {
+        require(hasContributed[msg.sender], "You didnt contributed");
         require(!hasRefunded[msg.sender], "You already has been refunded");
-        uint256 amountToWithdraw = contributionsByPeople[msg.sender].value;
+        uint256 toWithdraw = contributionsByPeople[msg.sender].value;
         contributionsByPeople[msg.sender].value = 0;
-        (bool success, ) = payable(msg.sender).call{value:amountToWithdraw}("");
+        (bool success, ) = payable(msg.sender).call{value: toWithdraw}("");
         require(success, "Failed to send Ether");
         hasRefunded[msg.sender] = true;
-        emit ContributorRefounded(msg.sender, amountToWithdraw);
-
+        emit ContributorRefounded(msg.sender, toWithdraw);
     }
-
 
     /**@notice creates a new instance campaign
         @dev use CREATE in the factory contract 
         REQUIREMENTS:
             due date must be major than the current block time
      */
-    function initializeCampaign
-    (
+    function initializeCampaign(
         string calldata _campaignName,
-        uint _fundingGoal,
-        uint _deadline,
-        uint _fundingCap,
+        uint256 _fundingGoal,
+        uint256 _deadline,
+        uint256 _fundingCap,
         address _beneficiaryAddress,
         address _campaignCreator,
         address _protocolOwner
-    ) external override
-    {
-        require(_deadline > block.timestamp, "Your duedate have to be major than the current time");
+    ) external override {
+        require(
+            _deadline > block.timestamp,
+            "Your duedate have to be major than the current time"
+        );
 
-
-        theCampaign = Campaign(
-            {
+        theCampaign = Campaign({
             campaignName: _campaignName,
-            fundingGoal:  etherToWei(_fundingGoal),
+            fundingGoal: etherToWei(_fundingGoal),
             fundingCap: etherToWei(_fundingCap),
             deadline: _deadline,
-            beneficiary:_beneficiaryAddress,
+            beneficiary: _beneficiaryAddress,
             owner: _campaignCreator,
             created: block.timestamp,
-            minimumCollected: false,
             state: State.Ongoing,
             amountRised: 0
-            });
+        });
 
         protocolOwner = _protocolOwner;
     }
-    
+
     /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
     
     @dev 
     */
-    function state() private view returns(uint8 _state) {
-
-        if(theCampaign.deadline > block.timestamp 
-        && theCampaign.amountRised < theCampaign.fundingCap)
-        {
+    function state() private view returns (uint8 _state) {
+        if (
+            theCampaign.deadline > block.timestamp &&
+            theCampaign.amountRised < theCampaign.fundingGoal
+        ) {
             return uint8(State.Ongoing);
-        }   
-
-        else if(theCampaign.amountRised >= theCampaign.fundingCap || 
-        theCampaign.amountRised >= theCampaign.fundingGoal)
-        {
+        } 
+        else if (theCampaign.amountRised >= theCampaign.fundingGoal) {
+            return uint8(State.EarlySuccess);
+        } 
+        else if (theCampaign.amountRised >= theCampaign.fundingCap) {
             return uint8(State.Succeded);
-        }
-
-        else if(theCampaign.deadline < block.timestamp
-        && theCampaign.minimumCollected == false 
-        && theCampaign.amountRised < theCampaign.fundingGoal)
-        {
+        } 
+        else if (
+            theCampaign.deadline < block.timestamp &&
+            theCampaign.amountRised < theCampaign.fundingGoal
+        ) {
             return uint8(State.Failed);
         }
     }
 
     /**@notice use to get a revenue of 1% for each contribution made */
-    function getPercentage(uint256 num) private pure returns (uint256){
-        return num * 1 / 100;
-        
+    function getPercentage(uint256 num) private pure returns (uint256) {
+        return (num * 1) / 100;
     }
 
-    function etherToWei(uint _sumInEth) private pure returns (uint){
+    function etherToWei(uint256 _sumInEth) private pure returns (uint256) {
         return _sumInEth * 1 ether;
     }
-
-
 }
-
