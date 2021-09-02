@@ -21,7 +21,6 @@ contract Crowdfy is CrowdfyI {
     event ContributionMade(Contribution _contributionMade); // fire when a contribution is made
     event MinimumReached(string); //fire when the campaign reached the minimum amoun to succced
     event BeneficiaryWitdraws(
-        string _message,
         address _beneficiaryAddress,
         uint256 _amount
     ); //fire when the beneficiary withdraws found
@@ -30,7 +29,11 @@ contract Crowdfy is CrowdfyI {
         address _payoutDestination,
         uint256 _payoutAmount
     );
-    event CampaignFinished(string _message, uint256 _timeOfFinalization);
+    event CampaignFinished(
+        uint8 _state, 
+        uint256 _timeOfFinalization, 
+        uint256 _amountRised
+    );
     event NewEarning(uint256 _earningMade);
 
     //** **************** STRUCTS ********************** */
@@ -57,6 +60,7 @@ contract Crowdfy is CrowdfyI {
     }
 
     //** **************** STATE VARIABLES ********************** */
+    bool private isInitialized = false;
     address private protocolOwner; //sets the owner of the protocol to make earnings
 
     //all the contribution made
@@ -195,7 +199,6 @@ contract Crowdfy is CrowdfyI {
         require(success, "Failed to send Ether");
 
         emit BeneficiaryWitdraws(
-            "The beneficiary has withdraw the founds",
             theCampaign.beneficiary,
             toWithdraw
         );
@@ -204,8 +207,9 @@ contract Crowdfy is CrowdfyI {
         if (withdrawn >= theCampaign.fundingCap) {
             theCampaign.state = State.Finalized;
             emit CampaignFinished(
-                "The campaign was finished succesfully",
-                block.timestamp
+                state(),
+                block.timestamp,
+                theCampaign.amountRised
             );
         }
     }
@@ -233,6 +237,8 @@ contract Crowdfy is CrowdfyI {
         @dev use CREATE in the factory contract 
         REQUIREMENTS:
             due date must be major than the current block time
+
+            campaign cannot be initialized from iniside or cannot be initialized more than once a particular campaign
      */
     function initializeCampaign(
         string calldata _campaignName,
@@ -247,6 +253,7 @@ contract Crowdfy is CrowdfyI {
             _deadline > block.timestamp,
             "Your duedate have to be major than the current time"
         );
+        assert(!isInitialized);
 
         theCampaign = Campaign({
             campaignName: _campaignName,
@@ -261,6 +268,7 @@ contract Crowdfy is CrowdfyI {
         });
 
         protocolOwner = _protocolOwner;
+        isInitialized = true;
     }
 
     /**@notice evaluates the current state of the campaign, its used for the "inState" modifier
@@ -270,16 +278,24 @@ contract Crowdfy is CrowdfyI {
     function state() private view returns (uint8 _state) {
         if (
             theCampaign.deadline > block.timestamp &&
-            theCampaign.amountRised < theCampaign.fundingGoal
+            theCampaign.amountRised < theCampaign.fundingGoal &&
+            withdrawn == 0
         ) {
             return uint8(State.Ongoing);
         } 
-        else if (theCampaign.amountRised >= theCampaign.fundingGoal) {
+        else if (theCampaign.amountRised >= theCampaign.fundingGoal && 
+                theCampaign.amountRised < theCampaign.fundingCap) { //otro and aqui revisando la duedate. o con un nested if 
             return uint8(State.EarlySuccess);
         } 
-        else if (theCampaign.amountRised >= theCampaign.fundingCap) {
+        else if (theCampaign.amountRised >= theCampaign.fundingCap && 
+        withdrawn < theCampaign.fundingCap) {
+
             return uint8(State.Succeded);
         } 
+        else if (theCampaign.amountRised >= theCampaign.fundingCap && 
+        withdrawn >= theCampaign.fundingCap) {
+            return uint8(State.Finalized);
+        }
         else if (
             theCampaign.deadline < block.timestamp &&
             theCampaign.amountRised < theCampaign.fundingGoal

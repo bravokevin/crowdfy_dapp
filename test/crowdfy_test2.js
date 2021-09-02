@@ -216,5 +216,82 @@ contract('Crowdfy2', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal(((ONE_ETH + (ONE_ETH / 2)) + (ONE_ETH + (ONE_ETH / 2))) - ((1 / 100) * ((ONE_ETH + (ONE_ETH / 2)) + (ONE_ETH + (ONE_ETH / 2)))))
             expect(campaignDestructured.state).to.equal(STATE.paidOut)
         })
+
+        it('should pass to state finalized', async () => {
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH + (ONE_ETH / 2)
+                });
+
+            let campaignStruct = await contract.theCampaign.call()
+
+            let campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.state).to.equal(STATE.earlySuccess)
+
+            await contract.withdraw({ from: beneficiary });
+
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH + (ONE_ETH / 2)
+                });
+            campaignStruct = await contract.theCampaign.call()
+
+            campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.state).to.equal(STATE.succed)
+
+            await contract.withdraw({ from: beneficiary });
+            campaignStruct = await contract.theCampaign.call()
+
+            campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.state).to.equal(STATE.paidOut)
+        })
+
+        it('should not  be able to interact with the campaign once is finished', async () => {
+
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH + ONE_ETH + (ONE_ETH / 2)
+                });
+            await contract.withdraw({ from: beneficiary });
+
+            let campaignStruct = await contract.theCampaign.call()
+
+            let campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.state).to.equal(STATE.paidOut)
+
+            try {
+                await contract.contribute(
+                    {
+                        from: contributor1,
+                        value: ONE_ETH + (ONE_ETH / 2)
+                    });
+                expect.fail()
+            }
+            catch (err) {
+                expect(err.reason).to.equal("Not Permited during this state of the campaign.")
+            }
+            try {
+                await contract.withdraw({ from: beneficiary });
+                expect.fail()
+            }
+            catch (err) {
+                expect(err.reason).to.equal("Not Permited during this state of the campaign.")
+            }
+            try {
+                await contract.claimFounds({ from: contributor1 });
+                expect.fail()
+            }
+            catch (err) {
+                expect(err.reason).to.equal("Not Permited during this state of the campaign.")
+            }
+        })
+
     })
 })

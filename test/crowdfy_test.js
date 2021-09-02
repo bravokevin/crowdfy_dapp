@@ -95,6 +95,43 @@ contract('Crowdfy', (accounts) => {
 
     });
 
+    it("should not allowed to initialize the campaign from inside", async () =>{
+
+        try{
+            await contract.initializeCampaign(
+                "My Campaign",
+                1,
+                CREATION_TIME,
+                1,
+                accounts[6],
+                accounts[7],
+                accounts[6],
+                {from: contributor2}
+            )
+            expect.fail()
+        }
+        catch(err) {
+
+
+        }
+        try{
+            await contract.initializeCampaign(
+                "My Campaign",
+                1,
+                CREATION_TIME,
+                1,
+                accounts[6],
+                accounts[7],
+                accounts[6],
+                {from: contributor2}
+            )
+            expect.fail()
+        }
+        catch(err) {
+            console.log(err)
+        }
+    })
+
     describe('contributions', async () => {
 
         it("should contribute founds", async () => {
@@ -337,11 +374,10 @@ contract('Crowdfy', (accounts) => {
 
             expect(campaignDestructured.amountRised).to.equal((ONE_ETH + amount) - ((1 / 100) * (ONE_ETH + amount)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
-
         })
     })
 
-    describe('Withdraw', async () => {
+    describe.only('Withdraw', async () => {
         it('should allow the beneficiary withdraw during succes state', async () => {
 
 
@@ -366,14 +402,12 @@ contract('Crowdfy', (accounts) => {
 
             let balanceFinal = await web3.eth.getBalance(beneficiary)
 
-            //NOTICE = idk where those 4000 come from
             expect(
                 (balanceFinal - balanceinicial) +
                 (tx.gasPrice * txInfo.receipt.gasUsed)
             ).to.equal(
-                ONE_ETH + ONE_ETH -
-                ((1 / 100) * (ONE_ETH + ONE_ETH)) +// the fee that was send to the owner of the protocol (me)
-                4000)
+                (ONE_ETH + ONE_ETH) -
+                ((1 / 100) * (ONE_ETH + ONE_ETH))) // the fee that was send to the owner of the protocol (me))
 
         })
 
