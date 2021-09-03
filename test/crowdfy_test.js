@@ -500,7 +500,7 @@ contract('Crowdfy', (accounts) => {
 
     })
 
-    describe('Refunding', async () => {
+    describe.only('Refunding', async () => {
         it('should allow contributors to refound in case of failure', async () => {
 
             await contract.contribute(
@@ -605,6 +605,19 @@ contract('Crowdfy', (accounts) => {
             catch (error) {
                 expect(error.reason).to.equal("You already has been refunded")
             }
+        })
+        it('once refunded their contribution value should be 0', async () =>{
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH / 3
+                });
+
+                await contract.setDate({ from: userCampaignCreator });
+
+                await contract.claimFounds({ from: contributor1 })
+            const contribution = await contract.contributionsByPeople.call(contributor1)
+            expect(Number(contribution.value)).to.equal(0)
         })
     })
 

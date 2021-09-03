@@ -1,0 +1,839 @@
+{
+  "contractName": "CrowdfyI",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "contribute",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claimFounds",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_campaignName",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_fundingGoal",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_deadline",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_fundingCap",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_beneficiaryAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_campaignCreator",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_protocolOwner",
+          "type": "address"
+        }
+      ],
+      "name": "initializeCampaign",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"claimFounds\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"contribute\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_campaignName\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_fundingGoal\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_deadline\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_fundingCap\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_beneficiaryAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_campaignCreator\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_protocolOwner\",\"type\":\"address\"}],\"name\":\"initializeCampaign\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdraw\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"claimFounds()\":{\"details\":\"this function follows the reentrancy prevent attack pattern for security, allowing one contributor at time to withdraw his founds, as the user has contributed. REQUIREMNTS: only in state failed only user who has contributed to the campaign only allows to refound once\"},\"contribute()\":{\"details\":\"this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution. if not: creates a new contribution datastructure and points that contribution with the user that made it also if the amountRised >= fundingGoal sets to true the minimum collected variable and if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success REQUIREMENTS: value must be > 0 only permited during ongoing state\"},\"initializeCampaign(string,uint256,uint256,uint256,address,address,address)\":{\"details\":\"this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns REQUIREMENTS:  _deadline > block.timestamp\",\"params\":{\"_beneficiaryAddress\":\"the address ot the beneficiary of the campaign\",\"_campaignName\":\"the name of the campaign\",\"_fundingCap\":\"the maximum amount to collect, when reached the campaign  closes\",\"_fundingGoal\":\"the miinimum amount to make the campaign success\",\"_protocolOwner\":\"the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.\"}},\"withdraw()\":{\"details\":\"function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices)  REQUIREMENTS: only during success state msg.sender == beneficiary\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"claimFounds()\":{\"notice\":\"allows all the contributors call this functions if the acmpaign was failed \"},\"contribute()\":{\"notice\":\"allows all users to contribute to the campaign, as the campaign is in ongoing state\"},\"initializeCampaign(string,uint256,uint256,uint256,address,address,address)\":{\"notice\":\"allows factory contract to create new campaigns\"},\"withdraw()\":{\"notice\":\"allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/C/Users/PC1/Desktop/blockchain_projects/crowdfy/contracts/CrowdfyI.sol\":\"CrowdfyI\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/C/Users/PC1/Desktop/blockchain_projects/crowdfy/contracts/CrowdfyI.sol\":{\"keccak256\":\"0x88d41e1b7700c8aa846307062757ef8eefbcad3918ed9cea02ba28d67b46296d\",\"license\":\"UNLICENSED\",\"urls\":[\"bzz-raw://2ab14f1b9adae2bcf0768d15aafd0cf8d16e670d38c97d0e0f19f144d8f35a78\",\"dweb:/ipfs/QmR3jXjb65kcXj1j3CVHFgua5ztW9cFKFiRrn2BcZUCk1T\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "//SPDX-License-Identifier: UNLICENSED;\r\npragma solidity 0.8.0;\r\n\r\ninterface CrowdfyI {\r\n\r\n\r\n    /**@notice  allows all users to contribute to the campaign, as the campaign is in ongoing state\r\n\r\n    @dev this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution.\r\n\r\n    if not: creates a new contribution datastructure and points that contribution with the user that made it\r\n\r\n    also if the amountRised >= fundingGoal sets to true the minimum collected variable\r\n\r\n        and if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success\r\n\r\n    REQUIREMENTS:\r\n        value must be > 0\r\n        only permited during ongoing state\r\n\r\n    */\r\n    function contribute() external payable;\r\n\r\n    /**@notice allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw\r\n\r\n    @dev function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices) \r\n\r\n    REQUIREMENTS:\r\n        only during success state\r\n        msg.sender == beneficiary\r\n     */\r\n    function withdraw() external payable;\r\n\r\n\r\n/** @notice allows all the contributors call this functions if the acmpaign was failed \r\n    @dev this function follows the reentrancy prevent attack pattern for security, allowing one contributor at time to withdraw his founds, as the user has contributed.\r\n\r\n    REQUIREMNTS:\r\n        only in state failed\r\n        only user who has contributed to the campaign\r\n        only allows to refound once\r\n    */\r\n    function claimFounds () external payable;\r\n\r\n\r\n    /**@notice allows factory contract to create new campaigns\r\n    \r\n        @param _campaignName the name of the campaign\r\n        @param _fundingGoal the miinimum amount to make the campaign success\r\n        @param _fundingCap the maximum amount to collect, when reached the campaign \r\n        closes\r\n        @param _beneficiaryAddress the address ot the beneficiary of the campaign\r\n        @param _protocolOwner the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.\r\n    @dev this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns\r\n\r\n        REQUIREMENTS: \r\n            _deadline > block.timestamp\r\n     */\r\n      function initializeCampaign\r\n    (\r\n        string calldata _campaignName,\r\n        uint _fundingGoal,\r\n        uint _deadline,\r\n        uint _fundingCap,\r\n        address _beneficiaryAddress,\r\n        address _campaignCreator,\r\n        address _protocolOwner\r\n    ) external;\r\n    \r\n}",
+  "sourcePath": "C:\\Users\\PC1\\Desktop\\blockchain_projects\\crowdfy\\contracts\\CrowdfyI.sol",
+  "ast": {
+    "absolutePath": "/C/Users/PC1/Desktop/blockchain_projects/crowdfy/contracts/CrowdfyI.sol",
+    "exportedSymbols": {
+      "CrowdfyI": [
+        971
+      ]
+    },
+    "id": 972,
+    "license": "UNLICENSED",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 940,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "40:22:3"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 971,
+        "linearizedBaseContracts": [
+          971
+        ],
+        "name": "CrowdfyI",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 941,
+              "nodeType": "StructuredDocumentation",
+              "src": "96:783:3",
+              "text": "@notice  allows all users to contribute to the campaign, as the campaign is in ongoing state\n@dev this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution.\nif not: creates a new contribution datastructure and points that contribution with the user that made it\nalso if the amountRised >= fundingGoal sets to true the minimum collected variable\nand if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success\nREQUIREMENTS:\nvalue must be > 0\nonly permited during ongoing state"
+            },
+            "functionSelector": "d7bb99ba",
+            "id": 944,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "contribute",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 942,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "904:2:3"
+            },
+            "returnParameters": {
+              "id": 943,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "923:0:3"
+            },
+            "scope": 971,
+            "src": "885:39:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 945,
+              "nodeType": "StructuredDocumentation",
+              "src": "932:408:3",
+              "text": "@notice allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw\n@dev function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices) \nREQUIREMENTS:\nonly during success state\nmsg.sender == beneficiary"
+            },
+            "functionSelector": "3ccfd60b",
+            "id": 948,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdraw",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 946,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1363:2:3"
+            },
+            "returnParameters": {
+              "id": 947,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1382:0:3"
+            },
+            "scope": 971,
+            "src": "1346:37:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 949,
+              "nodeType": "StructuredDocumentation",
+              "src": "1389:407:3",
+              "text": "@notice allows all the contributors call this functions if the acmpaign was failed \n@dev this function follows the reentrancy prevent attack pattern for security, allowing one contributor at time to withdraw his founds, as the user has contributed.\nREQUIREMNTS:\nonly in state failed\nonly user who has contributed to the campaign\nonly allows to refound once"
+            },
+            "functionSelector": "c383759e",
+            "id": 952,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "claimFounds",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 950,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1823:2:3"
+            },
+            "returnParameters": {
+              "id": 951,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1842:0:3"
+            },
+            "scope": 971,
+            "src": "1802:41:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 953,
+              "nodeType": "StructuredDocumentation",
+              "src": "1853:704:3",
+              "text": "@notice allows factory contract to create new campaigns\n@param _campaignName the name of the campaign\n@param _fundingGoal the miinimum amount to make the campaign success\n@param _fundingCap the maximum amount to collect, when reached the campaign \ncloses\n@param _beneficiaryAddress the address ot the beneficiary of the campaign\n@param _protocolOwner the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.\n@dev this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns\nREQUIREMENTS: \n_deadline > block.timestamp"
+            },
+            "functionSelector": "3d789e67",
+            "id": 970,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "initializeCampaign",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 968,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 955,
+                  "mutability": "mutable",
+                  "name": "_campaignName",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2609:29:3",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_string_calldata_ptr",
+                    "typeString": "string"
+                  },
+                  "typeName": {
+                    "id": 954,
+                    "name": "string",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2609:6:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_string_storage_ptr",
+                      "typeString": "string"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 957,
+                  "mutability": "mutable",
+                  "name": "_fundingGoal",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2649:17:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 956,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2649:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 959,
+                  "mutability": "mutable",
+                  "name": "_deadline",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2677:14:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 958,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2677:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 961,
+                  "mutability": "mutable",
+                  "name": "_fundingCap",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2702:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 960,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2702:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 963,
+                  "mutability": "mutable",
+                  "name": "_beneficiaryAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2729:27:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 962,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2729:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 965,
+                  "mutability": "mutable",
+                  "name": "_campaignCreator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2767:24:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 964,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2767:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 967,
+                  "mutability": "mutable",
+                  "name": "_protocolOwner",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2802:22:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 966,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2802:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2598:233:3"
+            },
+            "returnParameters": {
+              "id": 969,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2840:0:3"
+            },
+            "scope": 971,
+            "src": "2565:276:3",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 972,
+        "src": "66:2784:3"
+      }
+    ],
+    "src": "40:2810:3"
+  },
+  "legacyAST": {
+    "absolutePath": "/C/Users/PC1/Desktop/blockchain_projects/crowdfy/contracts/CrowdfyI.sol",
+    "exportedSymbols": {
+      "CrowdfyI": [
+        971
+      ]
+    },
+    "id": 972,
+    "license": "UNLICENSED",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 940,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "40:22:3"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 971,
+        "linearizedBaseContracts": [
+          971
+        ],
+        "name": "CrowdfyI",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "documentation": {
+              "id": 941,
+              "nodeType": "StructuredDocumentation",
+              "src": "96:783:3",
+              "text": "@notice  allows all users to contribute to the campaign, as the campaign is in ongoing state\n@dev this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution.\nif not: creates a new contribution datastructure and points that contribution with the user that made it\nalso if the amountRised >= fundingGoal sets to true the minimum collected variable\nand if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success\nREQUIREMENTS:\nvalue must be > 0\nonly permited during ongoing state"
+            },
+            "functionSelector": "d7bb99ba",
+            "id": 944,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "contribute",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 942,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "904:2:3"
+            },
+            "returnParameters": {
+              "id": 943,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "923:0:3"
+            },
+            "scope": 971,
+            "src": "885:39:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 945,
+              "nodeType": "StructuredDocumentation",
+              "src": "932:408:3",
+              "text": "@notice allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw\n@dev function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices) \nREQUIREMENTS:\nonly during success state\nmsg.sender == beneficiary"
+            },
+            "functionSelector": "3ccfd60b",
+            "id": 948,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdraw",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 946,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1363:2:3"
+            },
+            "returnParameters": {
+              "id": 947,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1382:0:3"
+            },
+            "scope": 971,
+            "src": "1346:37:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 949,
+              "nodeType": "StructuredDocumentation",
+              "src": "1389:407:3",
+              "text": "@notice allows all the contributors call this functions if the acmpaign was failed \n@dev this function follows the reentrancy prevent attack pattern for security, allowing one contributor at time to withdraw his founds, as the user has contributed.\nREQUIREMNTS:\nonly in state failed\nonly user who has contributed to the campaign\nonly allows to refound once"
+            },
+            "functionSelector": "c383759e",
+            "id": 952,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "claimFounds",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 950,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1823:2:3"
+            },
+            "returnParameters": {
+              "id": 951,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "1842:0:3"
+            },
+            "scope": 971,
+            "src": "1802:41:3",
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "documentation": {
+              "id": 953,
+              "nodeType": "StructuredDocumentation",
+              "src": "1853:704:3",
+              "text": "@notice allows factory contract to create new campaigns\n@param _campaignName the name of the campaign\n@param _fundingGoal the miinimum amount to make the campaign success\n@param _fundingCap the maximum amount to collect, when reached the campaign \ncloses\n@param _beneficiaryAddress the address ot the beneficiary of the campaign\n@param _protocolOwner the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution.\n@dev this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns\nREQUIREMENTS: \n_deadline > block.timestamp"
+            },
+            "functionSelector": "3d789e67",
+            "id": 970,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "initializeCampaign",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 968,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 955,
+                  "mutability": "mutable",
+                  "name": "_campaignName",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2609:29:3",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_string_calldata_ptr",
+                    "typeString": "string"
+                  },
+                  "typeName": {
+                    "id": 954,
+                    "name": "string",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2609:6:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_string_storage_ptr",
+                      "typeString": "string"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 957,
+                  "mutability": "mutable",
+                  "name": "_fundingGoal",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2649:17:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 956,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2649:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 959,
+                  "mutability": "mutable",
+                  "name": "_deadline",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2677:14:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 958,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2677:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 961,
+                  "mutability": "mutable",
+                  "name": "_fundingCap",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2702:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 960,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2702:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 963,
+                  "mutability": "mutable",
+                  "name": "_beneficiaryAddress",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2729:27:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 962,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2729:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 965,
+                  "mutability": "mutable",
+                  "name": "_campaignCreator",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2767:24:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 964,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2767:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 967,
+                  "mutability": "mutable",
+                  "name": "_protocolOwner",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 970,
+                  "src": "2802:22:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 966,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "2802:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "2598:233:3"
+            },
+            "returnParameters": {
+              "id": 969,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "2840:0:3"
+            },
+            "scope": 971,
+            "src": "2565:276:3",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 972,
+        "src": "66:2784:3"
+      }
+    ],
+    "src": "40:2810:3"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.0+commit.c7dfd78e.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.3.4",
+  "updatedAt": "2021-09-03T19:25:49.328Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "claimFounds()": {
+        "details": "this function follows the reentrancy prevent attack pattern for security, allowing one contributor at time to withdraw his founds, as the user has contributed. REQUIREMNTS: only in state failed only user who has contributed to the campaign only allows to refound once"
+      },
+      "contribute()": {
+        "details": "this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution. if not: creates a new contribution datastructure and points that contribution with the user that made it also if the amountRised >= fundingGoal sets to true the minimum collected variable and if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success REQUIREMENTS: value must be > 0 only permited during ongoing state"
+      },
+      "initializeCampaign(string,uint256,uint256,uint256,address,address,address)": {
+        "details": "this function uses the minimal proxy pattern in his factory to reduce the gas cost of creation of the campaigns REQUIREMENTS:  _deadline > block.timestamp",
+        "params": {
+          "_beneficiaryAddress": "the address ot the beneficiary of the campaign",
+          "_campaignName": "the name of the campaign",
+          "_fundingCap": "the maximum amount to collect, when reached the campaign  closes",
+          "_fundingGoal": "the miinimum amount to make the campaign success",
+          "_protocolOwner": "the person who deployed the contrac, its used to get earnigs (0.5%) with every contribution."
+        }
+      },
+      "withdraw()": {
+        "details": "function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices)  REQUIREMENTS: only during success state msg.sender == beneficiary"
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "claimFounds()": {
+        "notice": "allows all the contributors call this functions if the acmpaign was failed "
+      },
+      "contribute()": {
+        "notice": "allows all users to contribute to the campaign, as the campaign is in ongoing state"
+      },
+      "initializeCampaign(string,uint256,uint256,uint256,address,address,address)": {
+        "notice": "allows factory contract to create new campaigns"
+      },
+      "withdraw()": {
+        "notice": "allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw"
+      }
+    },
+    "version": 1
+  }
+}
