@@ -293,5 +293,38 @@ contract('Crowdfy2', (accounts) => {
             }
         })
 
+        it('should pass to state succed once 4 weeks has passed when the campaign is in state earlysuccess', async () => {
+            await contract.contribute(
+                {
+                    from: contributor1,
+                    value: ONE_ETH + (ONE_ETH / 4)
+                });
+
+            let campaignStruct = await contract.theCampaign.call()
+
+            let campaignDestructured = destructCampaign(campaignStruct);
+
+            expect(campaignDestructured.state).to.equal(STATE.earlySuccess)
+
+            await contract.setDate({ from: userCampaignCreator });
+
+
+            try {
+                await contract.contribute(
+                    {
+                        from: contributor1,
+                        value: ONE_ETH / 5
+                    });
+                campaignStruct = await contract.theCampaign.call()
+                campaignDestructured = destructCampaign(campaignStruct);
+                expect(campaignDestructured.state).to.equal(STATE.succed)
+            }
+            catch (err) {
+
+            }
+
+
+
+        })
     })
 })

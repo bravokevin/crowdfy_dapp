@@ -133,18 +133,22 @@ contract Crowdfy is CrowdfyI {
         emit NewEarning(earning);
         emit ContributionMade(contributionsByPeople[msg.sender]);
 
-        if (theCampaign.amountRised >= theCampaign.fundingGoal) {
+        if (theCampaign.amountRised >= theCampaign.fundingGoal && 
+                theCampaign.amountRised < theCampaign.fundingCap &&
+                theCampaign.deadline + 4 weeks >= block.timestamp) {
+
             theCampaign.state = State.EarlySuccess;
             emit MinimumReached("The minimum value has been reached");
-
-            if (
-                theCampaign.deadline > block.timestamp &&
-                theCampaign.amountRised >= theCampaign.fundingCap
+        }
+        else if (
+                (theCampaign.amountRised >= theCampaign.fundingCap && 
+                withdrawn < theCampaign.fundingCap) ||
+                (theCampaign.deadline + 4 weeks < block.timestamp &&
+                theCampaign.amountRised >= theCampaign.fundingGoal)
             ) 
             {
                 theCampaign.state = State.Succeded;
             }
-        }
     }
 
     /**@notice this function ITS ONLY for test porpuses
@@ -284,16 +288,21 @@ contract Crowdfy is CrowdfyI {
             return uint8(State.Ongoing);
         } 
         else if (theCampaign.amountRised >= theCampaign.fundingGoal && 
-                theCampaign.amountRised < theCampaign.fundingCap) { //otro and aqui revisando la duedate. o con un nested if 
-            return uint8(State.EarlySuccess);
+                theCampaign.amountRised < theCampaign.fundingCap &&
+                theCampaign.deadline + 4 weeks >= block.timestamp) { 
+                    return uint8(State.EarlySuccess);
+                
         } 
-        else if (theCampaign.amountRised >= theCampaign.fundingCap && 
-        withdrawn < theCampaign.fundingCap) {
+        else if ((theCampaign.amountRised >= theCampaign.fundingCap && 
+                withdrawn < theCampaign.fundingCap) ||
+                (theCampaign.deadline + 4 weeks < block.timestamp &&
+                theCampaign.amountRised >= theCampaign.fundingGoal)) {
 
             return uint8(State.Succeded);
         } 
         else if (theCampaign.amountRised >= theCampaign.fundingCap && 
         withdrawn >= theCampaign.fundingCap) {
+
             return uint8(State.Finalized);
         }
         else if (

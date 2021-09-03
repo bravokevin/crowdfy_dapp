@@ -128,7 +128,6 @@ contract('Crowdfy', (accounts) => {
             expect.fail()
         }
         catch(err) {
-            console.log(err)
         }
     })
 
@@ -375,9 +374,10 @@ contract('Crowdfy', (accounts) => {
             expect(campaignDestructured.amountRised).to.equal((ONE_ETH + amount) - ((1 / 100) * (ONE_ETH + amount)))
             expect(campaignDestructured.state).to.equal(STATE.succed)
         })
+
     })
 
-    describe.only('Withdraw', async () => {
+    describe('Withdraw', async () => {
         it('should allow the beneficiary withdraw during succes state', async () => {
 
 
