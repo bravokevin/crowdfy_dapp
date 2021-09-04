@@ -65,6 +65,8 @@ contract CrowdfyFabric is CrowdfyFabricI{
         address _beneficiaryAddress
     ) external override returns(uint256) {
 
+        // WARNING posible burnt of ether when we set _beneficiaryAddress to 0
+
         address campaignCreator = msg.sender;
         
         address cloneContract = Clones.clone(campaignImplementation);

@@ -22,7 +22,7 @@ contract('CrowdfyFabric', accounts => {
     };
 
     const CREATION_TIME = 1686614159;
-    
+
     before(async () => {
         contract = await CrowdfyFabricContract.new(
             {
@@ -31,15 +31,15 @@ contract('CrowdfyFabric', accounts => {
         )
     })
 
-    it("should create a campaign instance correctly", async () =>{
+    it("should create a campaign instance correctly", async () => {
         await contract.createCampaign("My Campaign",
-        1000000,
-        CREATION_TIME,
-        2000000,
-        beneficiary,
-         {from: userCampaignCreator});
-        
-        const  campaignLength = await contract.getCampaignsLength.call();
+            1000000,
+            CREATION_TIME,
+            2000000,
+            beneficiary,
+            { from: userCampaignCreator });
+
+        const campaignLength = await contract.getCampaignsLength.call();
 
         expect(Number(campaignLength)).to.equal(1)
 
@@ -57,18 +57,18 @@ contract('CrowdfyFabric', accounts => {
         expect(destructuredCampaign.owner).to.equal(userCampaignCreator);
     })
 
-    it('should not crete campaigns were due date is minor than the current time', async () =>{
-        try{
+    it('should not crete campaigns were due date is minor than the current time', async () => {
+        try {
             await contract.createCampaign("My Campaign",
-            1000000,
-            1626472796,
-            2000000,
-            beneficiary, {from: userCampaignCreator});
+                1000000,
+                1626472796,
+                2000000,
+                beneficiary, { from: userCampaignCreator });
 
             expect.fail()
         }
-        catch(err){
-            expect(err.reason).to.equal( "Your duedate have to be major than the current time");
+        catch (err) {
+            expect(err.reason).to.equal("Your duedate have to be major than the current time");
         }
     })
 })

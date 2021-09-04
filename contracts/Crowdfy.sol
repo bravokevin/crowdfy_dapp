@@ -186,13 +186,10 @@ contract Crowdfy is CrowdfyI {
         uint256 toWithdraw;
 
         // prevents errors for underflow
-        if(amountToWithdraw < withdrawn){
-            toWithdraw = withdrawn - amountToWithdraw;
-        }
-        else{
-            toWithdraw = amountToWithdraw - withdrawn;
-        }
-        // WARNING: posible error for overflow(but that would be is a lot of ether)
+        amountToWithdraw < withdrawn ? toWithdraw = withdrawn - amountToWithdraw : 
+        toWithdraw = amountToWithdraw - withdrawn;
+
+        // WARNING: posible error due overflow prevent mechanism (but that would be is a lot of ether)
         withdrawn += amountToWithdraw;
 
         amountToWithdraw = 0;//prevents reentrancy
