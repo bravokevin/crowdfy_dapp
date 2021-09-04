@@ -151,13 +151,6 @@ contract Crowdfy is CrowdfyI {
             }
     }
 
-    /**@notice this function ITS ONLY for test porpuses
-        this function has been removed during the deployment process
-    */
-    function setDate() external {
-        theCampaign.deadline = 3;
-        state();
-    }
 
     /**@notice allows beneficiary to withdraw the founds of the campaign if this was succeded
 
