@@ -208,6 +208,12 @@ contract Crowdfy is CrowdfyI {
         }
     }
 
+    ///@notice this function ITS ONLY for test porpuses
+    function setDate() external {
+        theCampaign.deadline = 3;
+        state();
+    }
+
     /**@notice claim a refund if the campaign was failed and only if you are a contributor
     @dev this follows the withdraw pattern to prevent reentrancy
     */
@@ -251,8 +257,8 @@ contract Crowdfy is CrowdfyI {
 
         theCampaign = Campaign({
             campaignName: _campaignName,
-            fundingGoal: etherToWei(_fundingGoal),
-            fundingCap: etherToWei(_fundingCap),
+            fundingGoal: _fundingGoal,
+            fundingCap: _fundingCap,
             deadline: _deadline,
             beneficiary: _beneficiaryAddress,
             owner: _campaignCreator,
@@ -308,7 +314,7 @@ contract Crowdfy is CrowdfyI {
         return (num * 1) / 100;
     }
 
-    function etherToWei(uint256 _sumInEth) private pure returns (uint256) {
-        return _sumInEth * 1 ether;
-    }
+    // function etherToWei(uint256 _sumInEth) private pure returns (uint256) {
+    //     return _sumInEth * 1 ether;
+    // }
 }

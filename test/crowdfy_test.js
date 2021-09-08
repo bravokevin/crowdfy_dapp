@@ -64,9 +64,9 @@ contract('Crowdfy', (accounts) => {
 
         await contractFactory.createCampaign(
             "My Campaign",
-            1,
+            String(ONE_ETH),
             CREATION_TIME,
-            1,
+            String(ONE_ETH),
             beneficiary,
             { from: userCampaignCreator }
         );
@@ -377,7 +377,7 @@ contract('Crowdfy', (accounts) => {
 
     })
 
-    describe.only('Withdraw', async () => {
+    describe('Withdraw', async () => {
         it('should allow the beneficiary withdraw during succes state', async () => {
 
 

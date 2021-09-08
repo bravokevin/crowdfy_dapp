@@ -51,9 +51,11 @@ contract('Crowdfy2', (accounts) => {
 
         await contractFactory.createCampaign(
             "My Campaign",
-            1,
+                        String(ONE_ETH),
+
             CREATION_TIME,
-            2,
+            String(ONE_ETH +ONE_ETH),
+
             beneficiary,
             { from: userCampaignCreator }
         );
