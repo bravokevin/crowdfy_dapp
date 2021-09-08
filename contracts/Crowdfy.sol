@@ -163,8 +163,6 @@ contract Crowdfy is CrowdfyI {
         second, add that amount "toWithdraw" the the quantity that the beneficiary has already withdrawing "withdrawn"
 
         third, substaract the amount that the beneficiary has withdrawn to the amount that the bneficiary is able to withdraw
-
-
     */
     function withdraw()
         external
@@ -208,11 +206,6 @@ contract Crowdfy is CrowdfyI {
         }
     }
 
-    ///@notice this function ITS ONLY for test porpuses
-    function setDate() external {
-        theCampaign.deadline = 3;
-        state();
-    }
 
     /**@notice claim a refund if the campaign was failed and only if you are a contributor
     @dev this follows the withdraw pattern to prevent reentrancy
@@ -313,8 +306,4 @@ contract Crowdfy is CrowdfyI {
     function getPercentage(uint256 num) private pure returns (uint256) {
         return (num * 1) / 100;
     }
-
-    // function etherToWei(uint256 _sumInEth) private pure returns (uint256) {
-    //     return _sumInEth * 1 ether;
-    // }
 }
