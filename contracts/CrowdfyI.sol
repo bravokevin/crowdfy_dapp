@@ -6,27 +6,32 @@ interface CrowdfyI {
 
     /**@notice  allows all users to contribute to the campaign, as the campaign is in ongoing state
 
-    @dev this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the value of the contribution.
+    * @dev this function evalueates if the user already has contribute, if that's true: rewrites the existing transaction 
+    datastructure asociate with this  user incrementing the number of transct made by this user and increment sum the 
+    value of the contribution.
 
-    if not: creates a new contribution datastructure and points that contribution with the user that made it
+    * if not: creates a new contribution datastructure and points that contribution with the user that made it
 
-    also if the amountRised >= fundingGoal sets to true the minimum collected variable
+    * also if the amountRised >= fundingGoal sets to true the minimum collected variable
 
         and if the deadline > block.timestamp && amountRised >= fundingCap sets the state of the campaign to success
 
-    REQUIREMENTS:
+    * REQUIREMENTS:
         value must be > 0
-        only permited during ongoing state
+        only permited during ongoing or earlySucces state
 
     */
     function contribute() external payable;
 
-    /**@notice allows the beneficiary of the campaign withdraw the founds if the campaign was succeded. sets the campaign to state finalize once the user has withdraw
-
-    @dev function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices) 
+    /**@notice allows the beneficiary of the campaign withdraw the founds if the campaign was succeded or at least reach a earlySuccess state.
+    * sets the campaign to state finalize once the user has withdrawn all the founds
+    
+    * @dev function follows the reentrancy prevent attack and also uses the .call method to transfer the ether(following the consensys advices) 
+    * When reach early succes state beneficiary is allow to withdraw the amountRised until that moment, that amount withdrawn is substracted of the total
+     amount that the campaign can achive (fundingCap) for each withdran until reach the total amount.
 
     REQUIREMENTS:
-        only during success state
+        only during success or earlySuccess state
         msg.sender == beneficiary
      */
     function withdraw() external payable;
@@ -55,6 +60,7 @@ interface CrowdfyI {
 
         REQUIREMENTS: 
             _deadline > block.timestamp
+            only allows to create one campaign per instance
      */
       function initializeCampaign
     (
