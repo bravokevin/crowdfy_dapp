@@ -102,7 +102,7 @@ contract Crowdfy is CrowdfyI {
     {
         require(msg.value > 0, "Put a correct amount");
 
-        uint256 earning = getPercentage(msg.value);
+        uint256 earning = _getPercentage(msg.value);
 
         if (hasContributed[msg.sender]) {
             Contribution storage theContribution = contributionsByPeople[
@@ -303,7 +303,7 @@ contract Crowdfy is CrowdfyI {
     }
 
     /**@notice use to get a revenue of 1% for each contribution made */
-    function getPercentage(uint256 num) private pure returns (uint256) {
+    function _getPercentage(uint256 num) private pure returns (uint256) {
         return (num * 1) / 100;
     }
 }
