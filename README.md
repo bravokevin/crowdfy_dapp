@@ -7,7 +7,7 @@ This repository contains the core smart contracts for the Crowdfy V1 Protocol
 
 ### Deployed in Ropsten Test Network
 
-        0xFbaca9b7286030B69EC35a7794e742106866A6Ff# Test
+        0xFbaca9b7286030B69EC35a7794e742106866A6Ff
 
 ## Running Tests
 
